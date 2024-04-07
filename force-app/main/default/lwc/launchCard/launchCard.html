@@ -1,0 +1,26 @@
+<template>
+    <lightning-card title="Intellosync workflow">
+        <div class="slds-m-around_medium">
+            <lightning-combobox
+                name="templateSelection"
+                label="Select Template"
+                value={selectedTemplate}
+                options={options}
+                onchange={handleTemplateSelection}
+                class="slds-m-bottom_medium">
+            </lightning-combobox>
+            <lightning-button
+                label="Launch Page"
+                onclick={handleLaunchPage}
+                class="slds-m-top_medium"
+                disabled={disableLaunchButton}>
+            </lightning-button>
+        </div>
+    </lightning-card>
+
+    <template if:true={isModalOpen}>
+        <c-launch-page-modal></c-launch-page-modal>
+    </template>
+
+    <p> selected template is {selectedTemplate}</p>
+</template>

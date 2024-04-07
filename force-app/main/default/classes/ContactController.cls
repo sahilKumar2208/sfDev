@@ -1,0 +1,41 @@
+public with sharing class ContactController {
+    public ContactController() {
+
+    }
+
+    private static final String API_BASE_URL = 'https://5917-2409-4050-db0-91af-a429-c6f2-bdba-f7b1.ngrok-free.app/api/v1/salesforce/contact';
+
+    // TODO: Add orgId as input argument after authentication code
+
+    @AuraEnabled(cacheable=true)
+    public static String uploadContactDetails(String jsonData) {
+
+        String apiUrl = API_BASE_URL;
+
+        HttpRequest request = new HttpRequest();
+
+        request.setEndpoint(apiUrl);
+        request.setMethod('PUT');
+
+        request.setBody(jsonData);
+
+        request.setHeader('Content-Type', 'application/json');
+        request.setHeader('ngrok-skip-browser-warning', '69420');
+
+        Http http = new Http();
+
+        try {
+            HttpResponse response = http.send(request);
+
+            if (response.getStatusCode() == 200) {
+                return response.getBody();
+            } else {
+                System.debug('Error: ' + response.getStatus());
+                return 'Error: ' + response.getStatus();
+            }
+        } catch (Exception e) {
+            System.debug('Exception: ' + e.getMessage());
+            return 'Exception: ' + e.getMessage();
+        }
+    }
+}
