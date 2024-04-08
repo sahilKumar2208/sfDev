@@ -122,8 +122,11 @@ export default class LaunchPageModal extends LightningModal {
           recordId: this.content.recordId
         });
 
-        console.log("this.launchId", this.launchId);
-        this.iframeUrl = `http://localhost:8080/123/launch/${this.launchId}`;
+        console.log("this.launchId", this.launchId.replace(/"/g, ""));
+        // Remove double quotes from this.launchId
+        const launchIdWithoutQuotes = this.launchId.replace(/"/g, "");
+        // this.iframeUrl = `http://localhost:8080/123/launch/${launchIdWithoutQuotes}`;
+        this.iframeUrl = `http://localhost:8080/123/launch/${launchIdWithoutQuotes}`;
       }
     }
   }
