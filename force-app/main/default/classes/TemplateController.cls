@@ -19,7 +19,7 @@ public with sharing class TemplateController {
         
         // Make the callout to the external REST API
         HttpRequest request = new HttpRequest();
-        request.setEndpoint('https://5917-2409-4050-db0-91af-a429-c6f2-bdba-f7b1.ngrok-free.app/api/v1/mapping/65e7e5f72e7cd34c3ca25964/templates?objectType=Opportunity');
+        request.setEndpoint('https://4d23-103-251-142-10.ngrok-free.app/api/v1/mapping/65e7e5f72e7cd34c3ca25964/templates?objectType=Opportunity');
         request.setMethod('GET');
         Http http = new Http();
         HttpResponse response = http.send(request);

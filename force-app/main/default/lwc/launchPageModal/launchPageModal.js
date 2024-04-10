@@ -1,4 +1,4 @@
-import { api } from "lwc";
+import { api, track } from "lwc";
 import LightningModal from "lightning/modal";
 // import getOpportunityDetails from '@salesforce/apex/OpportunityDetails.getOpportunityDetails';
 import uploadOpportunityDetails from "@salesforce/apex/OpportunityController.uploadOpportunityDetails";
@@ -19,6 +19,8 @@ export default class LaunchPageModal extends LightningModal {
   @api content;
   launchId;
   iframeUrl;
+  @track isLoading = true;
+
   // orgId, templateId, recordId
 
   connectedCallback() {
@@ -127,6 +129,10 @@ export default class LaunchPageModal extends LightningModal {
         const launchIdWithoutQuotes = this.launchId.replace(/"/g, "");
         // this.iframeUrl = `http://localhost:8080/123/launch/${launchIdWithoutQuotes}`;
         this.iframeUrl = `http://localhost:8080/123/launch/${launchIdWithoutQuotes}`;
+
+        if(this.iframeUrl){
+          this.isLoading = false;
+        }
       }
     }
   }

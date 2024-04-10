@@ -1,0 +1,23 @@
+.header-container {
+    display: flex;
+    align-items: center;
+    /* padding: 1rem; */
+    border-bottom: 1px solid #ccc;
+}
+
+.company-logo {
+    width: 40px;
+    height: auto;
+    margin-right: 10px;
+    margin-left: 5px;
+}
+
+.card-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.slds-m-around_medium {
+    padding: 1rem;
+}

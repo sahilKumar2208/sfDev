@@ -2,7 +2,7 @@ public with sharing class OpportunityController {
   public OpportunityController() {
   }
 
-  private static final String API_BASE_URL = 'https://5917-2409-4050-db0-91af-a429-c6f2-bdba-f7b1.ngrok-free.app/api/v1/salesforce/opportunity';
+  private static final String API_BASE_URL = 'https://4d23-103-251-142-10.ngrok-free.app/api/v1/salesforce/opportunity';
 
   // TODO: Add orgId as input argument after authentication code
 
@@ -81,20 +81,45 @@ public with sharing class OpportunityController {
         SELECT
           Id,
           Name,
-          Industry,
+          AccountNumber,
+          OwnerId,
+          Site, 
+          AccountSource,
+          Active__c, 
           AnnualRevenue,
-          NumberOfEmployees,
-          BillingCity,
-          BillingCountry,
-          BillingState,
-          BillingStreet,
-          BillingPostalCode,
-          Type,
-          ShippingAddress,
-          Rating,
-          Fax,
+          BillingAddress,
+          CleanStatus,
+          CreatedById, 
           CustomerPriority__c,
-          OwnerId
+          DandbCompanyId,
+          DunsNumber,
+          Jigsaw,
+          Description,
+          Tier, 
+          NumberOfEmployees,
+          Fax,
+          Industry,
+          LastModifiedById,
+          NaicsCode,
+          NaicsDesc,
+          NumberofLocations__c,
+          OperatingHoursId,
+          Ownership,
+          ParentId,
+          Phone,
+          Rating,
+          ShippingAddress,
+          Sic, 
+          SicDesc, 
+          SLA__c, 
+          SLAExpirationDate__c, 
+          SLASerialNumber__c, 
+          TickerSymbol, 
+          Tradestyle, 
+          Type, 
+          UpsellOpportunity__c, 
+          Website, 
+          YearStarted 
         FROM Account
         WHERE Id = :opp.AccountId
         LIMIT 1
@@ -151,25 +176,36 @@ public with sharing class OpportunityController {
       // Query related Owner
       User owner = [
         SELECT
-          Id,
-          Name,
-          Email,
-          Phone,
-          Title,
-          Department,
-          Address,
-          CompanyName,
-          FirstName,
-          LastName,
-          Username,
-          MobilePhone,
-          Fax,
-          Extension,
-          Signature,
-          SenderName,
-          SenderEmail,
-          EmailEncodingKey,
-          Division
+          Id, 
+          Address, 
+          Alias, 
+          BannerPhotoUrl, 
+          CommunityNickname, 
+          CompanyName, 
+          DefaultGroupNotificationFrequency, 
+          DigestFrequency, 
+          EmailEncodingKey, 
+          FirstName, 
+          ForecastEnabled, 
+          IsActive, 
+          IsExtIndicatorVisible, 
+          IsProfilePhotoActive, 
+          JigsawImportLimitOverride, 
+          LanguageLocaleKey, 
+          LastName, 
+          LocaleSidKey, 
+          MediumBannerPhotoUrl, 
+          MediumPhotoUrl, 
+          MobilePhone, 
+          Name, 
+          OutOfOfficeMessage, 
+          Phone, 
+          ProfileId, 
+          ReceivesAdminInfoEmails, 
+          ReceivesInfoEmails, 
+          SmallBannerPhotoUrl, 
+          TimeZoneSidKey, 
+          Username
         FROM User
         WHERE Id = :opp.OwnerId
         LIMIT 1

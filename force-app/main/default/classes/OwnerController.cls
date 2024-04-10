@@ -2,7 +2,7 @@ public with sharing class OwnerController {
   public OwnerController() {
   }
 
-  private static final String API_BASE_URL = 'https://5917-2409-4050-db0-91af-a429-c6f2-bdba-f7b1.ngrok-free.app/api/v1/salesforce/owner';
+  private static final String API_BASE_URL = 'https://4d23-103-251-142-10.ngrok-free.app/api/v1/salesforce/owner';
 
   // TODO: Add orgId as input argument after authentication code
 
