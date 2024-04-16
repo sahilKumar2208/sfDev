@@ -8,7 +8,7 @@ public with sharing class ContactController {
     // TODO: Add orgId as input argument after authentication code
 
     @AuraEnabled(cacheable=true)
-    public static String uploadContactDetails(String jsonData) {
+    public static String uploadContactDetails(String jsonData, String accessToken) {
 
         String apiUrl = API_BASE_URL;
 
@@ -21,6 +21,7 @@ public with sharing class ContactController {
 
         request.setHeader('Content-Type', 'application/json');
         request.setHeader('ngrok-skip-browser-warning', '69420');
+        request.setHeader('authorization', 'Bearer ' + accessToken);
 
         Http http = new Http();
 

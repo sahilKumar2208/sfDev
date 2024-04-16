@@ -7,6 +7,7 @@ import uploadContactDetails from "@salesforce/apex/ContactController.uploadConta
 import uploadOwnerDetails from "@salesforce/apex/OwnerController.uploadOwnerDetails";
 import getOpportunityDetails from "@salesforce/apex/OpportunityController.getOpportunityDetails";
 import createLaunchForm from "@salesforce/apex/LaunchFormController.createLaunchForm";
+import getAccessToken from "@salesforce/apex/AccessTokenController.getAccessToken";
 
 // mapping of object prefixes to object types
 const recordIdPrefixToObjectType = {
@@ -23,11 +24,27 @@ export default class LaunchPageModal extends LightningModal {
 
   // orgId, templateId, recordId
 
-  connectedCallback() {
+  async connectedCallback() {
     console.log("connected call back of modal is called");
 
+    const authToken =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhaGlsLmt1bWFyQGludGVsbG9zeW5jLmNvbSIsImlhdCI6MTcxMzE3MDYwOCwiZXhwIjoxNzE0MjUwNjA4fQ.MzfWSuy3mhu7yTmiCijijOpPaT3SVZg3DPQSjPeQ_Dk";
+
+    // Get CMT token
+    let cmtToken = localStorage.getItem(`accessToken`);
+    if (!cmtToken) {
+      cmtToken = await getAccessToken({
+        authServiceToken: authToken
+      });
+      console.log("cmt token here !!", cmtToken);
+
+      // Store token in localStorage
+      localStorage.setItem(`accessToken`, cmtToken);
+      console.log("Access token stored in localStorage");
+    }
+
     // this.loadOpportunityDetails(); //and this function also saves the "opp" data to our db.
-    this.createLaunchForm();
+    this.createLaunchForm(cmtToken);
 
     //save all the data related to current salesforce object
     //iframe url hit kro... and in the next js fetch config, fetch sf obj's data fill out form
@@ -45,8 +62,8 @@ export default class LaunchPageModal extends LightningModal {
     this.close("okay");
   }
 
-  async createLaunchForm() {
-    console.log("Hiiiiiiiiiiiiiiiiii !!!!!!!!!!");
+  async createLaunchForm(accessToken) {
+    console.log("Hii token !! -->", accessToken);
     //isme bohot saara kaam krna hai
     // 1. get all the details relevant to that particular recordId
     // 2. Save all that details to our private db
@@ -78,34 +95,47 @@ export default class LaunchPageModal extends LightningModal {
           opportunityDataResponse.errorMsg
         );
       } else {
+        console.log("acccccccccccc tookkkkk", accessToken);
         // Step2 : Save all the retrieve to db
         // Await all the asynchronous calls
         console.log("yooooooo !!!!!");
         await Promise.all([
-          this.postOpportunityDetails({
-            jsonData: JSON.stringify({
-              opportunity: opportunityDataResponse.opportunity,
-              recordId: this.content.recordId
-            })
-          }),
-          this.postAccountDetails({
-            jsonData: JSON.stringify({
-              account: opportunityDataResponse.account,
-              recordId: this.content.recordId
-            })
-          }),
-          this.postContactDetails({
-            jsonData: JSON.stringify({
-              contact: opportunityDataResponse.contacts,
-              recordId: this.content.recordId
-            })
-          }),
-          this.postOwnerDetails({
-            jsonData: JSON.stringify({
-              owner: opportunityDataResponse.owner,
-              recordId: this.content.recordId
-            })
-          })
+          this.postOpportunityDetails(
+            {
+              jsonData: JSON.stringify({
+                opportunity: opportunityDataResponse.opportunity,
+                recordId: this.content.recordId
+              })
+            },
+            accessToken
+          ),
+          this.postAccountDetails(
+            {
+              jsonData: JSON.stringify({
+                account: opportunityDataResponse.account,
+                recordId: this.content.recordId
+              })
+            },
+            accessToken
+          ),
+          this.postContactDetails(
+            {
+              jsonData: JSON.stringify({
+                contact: opportunityDataResponse.contacts,
+                recordId: this.content.recordId
+              })
+            },
+            accessToken
+          ),
+          this.postOwnerDetails(
+            {
+              jsonData: JSON.stringify({
+                owner: opportunityDataResponse.owner,
+                recordId: this.content.recordId
+              })
+            },
+            accessToken
+          )
         ]);
 
         // Step 3: attribute vs value kaa maapping add krna hai
@@ -121,7 +151,8 @@ export default class LaunchPageModal extends LightningModal {
 
         this.launchId = await createLaunchForm({
           templateId: this.content.templateId,
-          recordId: this.content.recordId
+          recordId: this.content.recordId,
+          accessToken: accessToken
         });
 
         console.log("this.launchId", this.launchId.replace(/"/g, ""));
@@ -130,48 +161,74 @@ export default class LaunchPageModal extends LightningModal {
         // this.iframeUrl = `http://localhost:8080/123/launch/${launchIdWithoutQuotes}`;
         this.iframeUrl = `http://localhost:8080/123/launch/${launchIdWithoutQuotes}`;
 
-        if(this.iframeUrl){
+        if (this.iframeUrl) {
           this.isLoading = false;
         }
       }
     }
   }
 
-  async postOpportunityDetails(jsonData) {
-    console.log("result json data is --->", jsonData);
+  async postOpportunityDetails(jsonData, accessToken) {
+    console.log(
+      "opportunity result json data is --->",
+      JSON.stringify(jsonData.jsonData)
+    );
+    console.log("access token  in post opp--->", accessToken);
+
     try {
-      const uploadResult = await uploadOpportunityDetails(jsonData);
-      console.log("Upload Result:", uploadResult);
+      const uploadResult = await uploadOpportunityDetails({
+        jsonData: jsonData.jsonData,
+        accessToken: accessToken
+      });
+      console.log("Opportunity Upload Result:", uploadResult);
     } catch (error) {
       console.error("Error uploading Opportunity Details 111111:", error);
     }
   }
 
-  async postAccountDetails(jsonData) {
-    console.log("result json data is --->", jsonData);
+  async postAccountDetails(jsonData, accessToken) {
+    console.log(
+      "account result json data is --->",
+      JSON.stringify(jsonData.jsonData)
+    );
     try {
-      const uploadResult = await uploadAccountDetails(jsonData);
-      console.log("Upload Result:", uploadResult);
+      const uploadResult = await uploadAccountDetails({
+        jsonData: jsonData.jsonData,
+        accessToken: accessToken
+      });
+      console.log("Account Upload Result:", uploadResult);
     } catch (error) {
       console.error("Error uploading Account Details 222222:", error);
     }
   }
 
-  async postContactDetails(jsonData) {
-    console.log("result json data is --->", jsonData);
+  async postContactDetails(jsonData, accessToken) {
+    console.log(
+      "contact result json data is --->",
+      JSON.stringify(jsonData.jsonData)
+    );
     try {
-      const uploadResult = await uploadContactDetails(jsonData);
-      console.log("Upload Result:", uploadResult);
+      const uploadResult = await uploadContactDetails({
+        jsonData: jsonData.jsonData,
+        accessToken: accessToken
+      });
+      console.log("Contact Upload Result:", uploadResult);
     } catch (error) {
       console.error("Error uploading Contact Details 333333:", error);
     }
   }
 
-  async postOwnerDetails(jsonData) {
-    console.log("result json data is --->", jsonData);
+  async postOwnerDetails(jsonData, accessToken) {
+    console.log(
+      "owner result json data is --->",
+      JSON.stringify(jsonData.jsonData)
+    );
     try {
-      const uploadResult = await uploadOwnerDetails(jsonData);
-      console.log("Upload Result:", uploadResult);
+      const uploadResult = await uploadOwnerDetails({
+        jsonData: jsonData.jsonData,
+        accessToken: accessToken
+      });
+      console.log("Owner Upload Result:", uploadResult);
     } catch (error) {
       console.error("Error uploading Owner Details 44444:", error);
     }

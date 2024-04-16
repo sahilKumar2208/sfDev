@@ -3,11 +3,11 @@ public with sharing class OpportunityController {
   }
 
   private static final String API_BASE_URL = 'https://4d23-103-251-142-10.ngrok-free.app/api/v1/salesforce/opportunity';
-
+  private static final String AUTHORIZATION_HEADER = 'authorization';
   // TODO: Add orgId as input argument after authentication code
 
   @AuraEnabled(cacheable=true)
-  public static String uploadOpportunityDetails(String jsonData) {
+  public static String uploadOpportunityDetails(String jsonData, String accessToken) {
     String apiUrl = API_BASE_URL;
 
     HttpRequest request = new HttpRequest();
@@ -19,6 +19,7 @@ public with sharing class OpportunityController {
 
     request.setHeader('Content-Type', 'application/json');
     request.setHeader('ngrok-skip-browser-warning', '69420');
+    request.setHeader(AUTHORIZATION_HEADER, 'Bearer ' + accessToken);
 
     Http http = new Http();
 
@@ -176,36 +177,54 @@ public with sharing class OpportunityController {
       // Query related Owner
       User owner = [
         SELECT
-          Id, 
-          Address, 
-          Alias, 
-          BannerPhotoUrl, 
-          CommunityNickname, 
-          CompanyName, 
-          DefaultGroupNotificationFrequency, 
-          DigestFrequency, 
-          EmailEncodingKey, 
-          FirstName, 
-          ForecastEnabled, 
-          IsActive, 
-          IsExtIndicatorVisible, 
-          IsProfilePhotoActive, 
-          JigsawImportLimitOverride, 
-          LanguageLocaleKey, 
-          LastName, 
-          LocaleSidKey, 
-          MediumBannerPhotoUrl, 
-          MediumPhotoUrl, 
-          MobilePhone, 
-          Name, 
-          OutOfOfficeMessage, 
-          Phone, 
-          ProfileId, 
-          ReceivesAdminInfoEmails, 
-          ReceivesInfoEmails, 
-          SmallBannerPhotoUrl, 
-          TimeZoneSidKey, 
-          Username
+        AboutMe, 
+        IsActive, 
+        Address, 
+        ReceivesAdminInfoEmails, 
+        Alias, 
+        ForecastEnabled, 
+        CallCenterId, 
+        DigestFrequency, 
+        CompanyName, 
+        ContactId, 
+        JigsawImportLimitOverride, 
+        DefaultGroupNotificationFrequency, 
+        DelegatedApproverId, 
+        Department, 
+        Division, 
+        EmailEncodingKey, 
+        SenderEmail, 
+        SenderName, 
+        Signature, 
+        Extension, 
+        Fax, 
+        IsProfilePhotoActive, 
+        IndividualId, 
+        ReceivesInfoEmails, 
+        LanguageLocaleKey, 
+        LocaleSidKey, 
+        ManagerId, 
+        MobilePhone, 
+        Name, 
+        FirstName, 
+        LastName, 
+        CommunityNickname, 
+        OutOfOfficeMessage, 
+        Phone, 
+        ProfileId, 
+        UserRoleId, 
+        FederationIdentifier, 
+        IsExtIndicatorVisible, 
+        StayInTouchNote, 
+        StayInTouchSignature,
+        StayInTouchSubject, 
+        TimeZoneSidKey, 
+        Title, 
+        MediumBannerPhotoUrl, 
+        BannerPhotoUrl, 
+        SmallBannerPhotoUrl, 
+        MediumPhotoUrl, 
+        Username 
         FROM User
         WHERE Id = :opp.OwnerId
         LIMIT 1

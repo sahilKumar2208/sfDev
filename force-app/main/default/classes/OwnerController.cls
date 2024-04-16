@@ -7,7 +7,7 @@ public with sharing class OwnerController {
   // TODO: Add orgId as input argument after authentication code
 
   @AuraEnabled(cacheable=true)
-  public static String uploadOwnerDetails(String jsonData) {
+  public static String uploadOwnerDetails(String jsonData, String accessToken) {
     String apiUrl = API_BASE_URL;
 
     HttpRequest request = new HttpRequest();
@@ -19,6 +19,7 @@ public with sharing class OwnerController {
 
     request.setHeader('Content-Type', 'application/json');
     request.setHeader('ngrok-skip-browser-warning', '69420');
+    request.setHeader('authorization', 'Bearer ' + accessToken);
 
     Http http = new Http();
 

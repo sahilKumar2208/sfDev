@@ -3,6 +3,9 @@ import { NavigationMixin } from "lightning/navigation";
 import getTemplates from "@salesforce/apex/TemplateController.getTemplates";
 import MyModal from "c/launchPageModal";
 import COMPANY_LOGO_URL from "@salesforce/resourceUrl/company_logo";
+import retrieveCurrentUserAccountDetails from "@salesforce/apex/AccountDetailsController.retrieveCurrentUserAccountDetails";
+// import generateToken from "@salesforce/apex/CreateAccessTokenController.generateToken";
+import getAccessToken from "@salesforce/apex/AccessTokenController.getAccessToken";
 
 // mapping of object prefixes to object types
 const objectPrefixToType = {
@@ -24,18 +27,50 @@ export default class LaunchCard extends NavigationMixin(LightningElement) {
 
   companyLogoUrl = COMPANY_LOGO_URL;
 
-  connectedCallback() {
+  async connectedCallback() {
     console.log("record id ------>", this.recordId);
 
-    // Fetching type of Salesforce object
-    const objectType = this.getObjectTypeFromId(this.recordId);
-    console.log("Object Type:", objectType);
+    try {
+      // Fetch current user details
+      const userDetails = await retrieveCurrentUserAccountDetails();
+      console.log("the current user's email", userDetails);
 
-    // API call to fetch all the templates related to this object (options for combobox)
-    if (objectType) {
-      this.fetchTemplates(objectType);
-    } else {
-      console.error("Could not determine object type from record Id.");
+      //   // Generate authentication service token
+      //   const authToken = await generateToken({
+      //     email: userDetails.Email,
+      //     expirationMinutes: 60
+      //   });
+      //   console.log("auth token --->", authToken);
+
+      //***** HARD CODING THE AUTH TOKEN *********//
+      const authToken =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhaGlsLmt1bWFyQGludGVsbG9zeW5jLmNvbSIsImlhdCI6MTcxMzE3MDYwOCwiZXhwIjoxNzE0MjUwNjA4fQ.MzfWSuy3mhu7yTmiCijijOpPaT3SVZg3DPQSjPeQ_Dk";
+
+      // Get CMT token
+      let cmtToken = localStorage.getItem(`accessToken`);
+      if (!cmtToken) {
+        cmtToken = await getAccessToken({
+          authServiceToken: authToken
+        });
+        console.log("cmt token here !!", cmtToken);
+
+        // Store token in localStorage
+        localStorage.setItem(`accessToken`, cmtToken);
+        console.log("Access token stored in localStorage");
+      }
+
+      // Fetching type of Salesforce object
+      const objectType = this.getObjectTypeFromId(this.recordId);
+      console.log("Object Type:", objectType);
+
+      // API call to fetch all the templates related to this object (options for combobox)
+      if (objectType) {
+        this.fetchTemplates(objectType, cmtToken);
+      } else {
+        console.error("Could not determine object type from record Id.");
+      }
+    } catch (error) {
+      console.error("An error occurred:", error);
     }
   }
 
@@ -46,9 +81,9 @@ export default class LaunchCard extends NavigationMixin(LightningElement) {
     return objectPrefixToType[prefix];
   }
 
-  fetchTemplates(objectType) {
+  fetchTemplates(objectType, cmtToken) {
     console.log("objecttttttttt iss --->", objectType);
-    getTemplates({ objectType: objectType })
+    getTemplates({ objectType: objectType, accessToken: cmtToken })
       .then((result) => {
         console.log("result iss ---->", result);
         // Handle the result, which contains template options

@@ -8,7 +8,7 @@ public with sharing class LaunchFormController {
     // TODO: Add orgId as input argument after authentication code
 
     @AuraEnabled(cacheable=true)
-    public static String createLaunchForm(String templateId, String recordId) {
+    public static String createLaunchForm(String templateId, String recordId, String accessToken) {
         System.debug('templateId is --->' + templateId);
         System.debug('recordId is ----->' + recordId);
 
@@ -28,6 +28,7 @@ public with sharing class LaunchFormController {
 
         request.setHeader('Content-Type', 'application/json');
         request.setHeader('ngrok-skip-browser-warning', '69420');
+        request.setHeader('authorization', 'Bearer ' + accessToken);
 
         Http http = new Http();
 
