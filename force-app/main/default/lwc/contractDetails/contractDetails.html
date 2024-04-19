@@ -1,3 +1,106 @@
 <template>
-    
+    <div class="slds-card">
+        <div class="slds-card__header slds-grid slds-grid_align-spread slds-p-bottom_medium slds-theme_shade">
+            <h2 class="slds-card__header-title slds-text-heading_medium">Contract Details</h2>
+            <div class="slds-card__header-actions">
+                <button class="slds-button slds-button_neutral">View More</button>
+            </div>
+        </div>
+        <template if:true={contractDetailsPresent}>
+            <div class="slds-card__body slds-card__body_inner">
+                <div class="slds-grid slds-grid_vertical slds-gutters_x-small">
+                    <div class="slds-col slds-p-bottom_medium">
+                        <div class="slds-tile slds-tile_board">
+                            <div class="slds-tile__title slds-text-title">Status</div>
+                            <div class="slds-tile__detail slds-text-body_regular">{status}</div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-p-bottom_medium">
+                        <div class="slds-tile slds-tile_board">
+                            <div class="slds-tile__title slds-text-title">Stage</div>
+                            <div class="slds-tile__detail slds-text-body_regular">{stage}</div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-p-bottom_medium">
+                        <div class="slds-tile slds-tile_board">
+                            <div class="slds-tile__title slds-text-title">Priority</div>
+                            <div class="slds-tile__detail slds-text-body_regular">{priority}</div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-p-bottom_medium">
+                        <div class="slds-tile slds-tile_board">
+                            <div class="slds-tile__title slds-text-title">Approvers</div>
+                            <div class="slds-tile__detail slds-text-body_regular">
+                                <!-- Iterate over the array of groups -->
+                                <template for:each={approvers} for:item="lvl">
+                                    <div key={lvl.approverLevel} class="slds-p-bottom_small">
+                                        <p class="slds-text-title">Approver Level {lvl.approverLevel}</p>
+                                        <!-- Iterate over the letters in the current group -->
+                                        <template for:each={lvl.fullNames} for:item="name">
+                                            <p key={name} class="slds-text-body_regular slds-m-bottom_xx-small">{name}
+                                            </p>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="slds-tile__title slds-text-title">Internal Signatories</div>
+                            <div class="slds-tile__detail slds-text-body_regular">
+                                <!-- Iterate over the array of groups -->
+                                <template for:each={internalSignatories} for:item="lvl">
+                                    <div key={lvl} class="slds-p-bottom_small">
+                                        <p class="slds-text-title">Signer Level {lvl.signerLevel}</p>
+                                        <!-- Iterate over the letters in the current group -->
+                                        <template for:each={lvl.fullNames} for:item="name">
+                                            <p key={name} class="slds-text-body_regular slds-m-bottom_xx-small">{name}
+                                            </p>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="slds-tile__title slds-text-title">Internal Participants</div>
+                            <div class="slds-tile__detail slds-text-body_regular">
+                                <template for:each={participants} for:item="name">
+                                    <p key={name} class="slds-text-body_regular slds-m-bottom_xx-small">{name}
+                                    </p>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
 </template>
+<!-- <template>
+    <div class="slds-card">
+        <header class="slds-card__header slds-grid">
+            <div class="slds-media slds-media_center slds-has-flexi-truncate">
+                <div class="slds-media__figure">
+                    <span class="slds-icon_container slds-icon-standard-opportunity">
+                        <lightning-icon icon-name="standard:opportunity" size="small"></lightning-icon>
+                    </span>
+                </div>
+                <div class="slds-media__body">
+                    <h2 class="slds-text-heading_medium slds-truncate">Contract Details</h2>
+                </div>
+            </div>
+        </header>
+        <div class="slds-card__body">
+            <div class="slds-grid slds-wrap">
+                <div class="slds-col">
+                    <p class="slds-text-title">Status: { status }</p>
+                </div>
+                <div class="slds-col">
+                    <p class="slds-text-title">Stage: { stage }</p>
+                </div>
+                <div class="slds-col">
+                    <p class="slds-text-title">Priority: { priority }</p>
+                </div>
+                <div class="slds-col">
+                    <p class="slds-text-title">Approvers: { approvers }</p>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</template> -->

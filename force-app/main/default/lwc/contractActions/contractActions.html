@@ -1,0 +1,28 @@
+<template>
+    <div class="slds-card">
+        <div class="slds-card__header slds-grid slds-grid_align-spread slds-p-bottom_medium slds-theme_shade">
+            <h2 class="slds-card__header-title slds-text-heading_medium">Contract Actions</h2>
+        </div>
+        <template if:true={contractDetailsPresent}>
+            <div class="slds-card__body slds-card__body_inner">
+                <!-- Conditionally render the button based on the value of showApproveUI -->
+                <template if:true={showApproveUI}>
+                    <div class="slds-grid slds-grid_align-spread slds-m-bottom_medium">
+                        <div class="slds-media slds-media_center">
+                            <div class="slds-media__figure">
+                                <span class="slds-icon_container slds-icon-standard-user">
+                                    <lightning-icon icon-name="standard:user" size="small"></lightning-icon>
+                                </span>
+                            </div>
+                            <div class="slds-media__body">
+                                <p class="slds-text-heading_small">{userName}</p>
+                            </div>
+                        </div>
+                        <button class="slds-button slds-button_brand" onclick={handleApprove}
+                            disabled={isButtonDisabled}>Approve</button>
+                    </div>
+                </template>
+            </div>
+        </template>
+    </div>
+</template>

@@ -1,0 +1,20 @@
+<!-- mapDisplay.html -->
+<template>
+    <lightning-card title="Map Data Display">
+        <template if:true={mapData}>
+            <!-- Iterate over the array of groups -->
+            <template for:each={mapData} for:item="group">
+                <div key={group.groupName}>
+                    <h2>{group.groupName}:</h2>
+                    <!-- Iterate over the letters in the current group -->
+                    <template for:each={group.letters} for:item="letter">
+                        <p key={letter}>{letter}</p>
+                    </template>
+                </div>
+            </template>
+        </template>
+        <template if:false={mapData}>
+            <p>No data available.</p>
+        </template>
+    </lightning-card>
+</template>
