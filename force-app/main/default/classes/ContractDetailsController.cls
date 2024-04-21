@@ -63,34 +63,30 @@ public with sharing class ContractDetailsController {
     }
 
 
-    // approval request 
-  @AuraEnabled(cacheable=true)
-  public static String approveContract(String contractId, String accessToken) {
+ // approval request 
+@AuraEnabled(cacheable=true)
+public static ResponseWrapper approveContract(String contractId, String accessToken) {
     HttpRequest request = new HttpRequest();
-
     request.setEndpoint('https://cmt-backend-playground.intellosync.com/api/v1/contracts/' + contractId + '/approvers/Approved');
     request.setMethod('POST');
-
     request.setHeader('Content-Type', 'application/json');
     request.setHeader('authorization', 'Bearer ' + accessToken);
-
     Http http = new Http();
-
+    ResponseWrapper responseWrapper = new ResponseWrapper();
     try {
-      HttpResponse response = http.send(request);
-
-      if (response.getStatusCode() == 200) {
-        return response.getBody();
-      } else {
-        System.debug('Error: ' + response.getStatus());
-        return 'Error: ' + response.getStatus();
-      }
+        HttpResponse response = http.send(request);
+        responseWrapper.statusCode = response.getStatusCode();
+        responseWrapper.body = response.getBody();
     } catch (Exception e) {
-      System.debug('Exception: ' + e.getMessage());
-      return 'Exception: ' + e.getMessage();
+        responseWrapper.statusCode = 500; // Internal Server Error
+        responseWrapper.body = 'Exception: ' + e.getMessage();
     }
-  }
+    return responseWrapper;
+}
 
-
+public class ResponseWrapper {
+    @AuraEnabled public Integer statusCode;
+    @AuraEnabled public String body;
+}
 
 }

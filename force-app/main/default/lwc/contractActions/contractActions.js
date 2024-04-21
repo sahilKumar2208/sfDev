@@ -14,6 +14,8 @@ export default class ContractActions extends LightningElement {
   @track contractId;
   @track cmtToken;
   @track isButtonDisabled = false;
+  @track showSuccessMessage = false;
+  @track showErrorMessage = false;
 
   async connectedCallback() {
     const authToken =
@@ -124,12 +126,27 @@ export default class ContractActions extends LightningElement {
   async handleApprove() {
     console.log("cmt token ", this.cmtToken);
     console.log("contractId ", this.contractId);
-    const approvalResponse = await approveContract({
-      contractId: this.contractId,
-      accessToken: this.cmtToken
-    });
-    console.log("approval response", approvalResponse);
-    console.log("Approve button clicked");
-    this.isButtonDisabled = true;
+
+    try {
+      const approvalResponse = await approveContract({
+        contractId: this.contractId,
+        accessToken: this.cmtToken
+      });
+      console.log("approval response body", approvalResponse.body);
+
+      console.log("approval response isss -->", approvalResponse);
+
+      if (approvalResponse.statusCode === 200) {
+        this.isButtonDisabled = true;
+        this.showSuccessMessage = true;
+        this.errorMessage = null;
+      } else {
+        this.showErrorMessage = true;
+        this.errorMessage = `Error: ${approvalResponse.body}`;
+      }
+    } catch (error) {
+      this.showErrorMessage = true;
+      this.errorMessage = `Exception: ${error.body.message}`;
+    }
   }
 }
