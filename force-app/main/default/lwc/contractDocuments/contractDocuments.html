@@ -1,0 +1,28 @@
+<template>
+    <div class="slds-card">
+        <div class="slds-card__header slds-grid slds-grid_align-spread slds-p-bottom_medium slds-theme_shade">
+            <h2 class="slds-text-heading_medium slds-truncate">Contract Documents</h2>
+        </div>
+
+    <lightning-card title="Document List">
+        <template if:true={isContractDetailsPresent}>
+            <template for:each={documentDetails} for:item="documentItem">
+                <div key={documentItem._id} class="slds-p-around_medium">
+                    <p>{documentItem.nameOfDocument}</p>
+                    <lightning-button-group>
+                        <lightning-button label="Download" onclick={handleDownload}
+                            data-document-id={documentItem.contractId}
+                            data-storage-id={documentItem.storageDocumentId}
+                            data-extension={documentItem.extension}></lightning-button>
+                        <lightning-button label="View" onclick={handleView} data-document-id={documentItem.contractId}
+                            data-storage-id={documentItem.storageDocumentId} data-extension={documentItem.extension}></lightning-button>
+                    </lightning-button-group>
+                </div>
+            </template>
+        </template>
+        <template if:false={isContractDetailsPresent}>
+            <p>No documents to display</p>
+        </template>
+    </lightning-card>
+    </div>
+</template>

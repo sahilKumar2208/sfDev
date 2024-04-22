@@ -1,0 +1,22 @@
+<!-- documentList.html -->
+<template>
+    <lightning-card title="Document List">
+        <template if:true={documents}>
+            <template for:each={documents} for:item="documentItem">
+                <div key={documentItem._id} class="slds-p-around_medium">
+                    <p>{documentItem.nameOfDocument}</p>
+                    <lightning-button-group>
+                        <lightning-button label="Download" onclick={handleDownload}
+                            data-document-id={documentItem.contractId}
+                            data-storage-id={documentItem.storageDocumentId}></lightning-button>
+                        <lightning-button label="View" onclick={handleView} data-document-id={documentItem.contractId}
+                            data-storage-id={documentItem.storageDocumentId}></lightning-button>
+                    </lightning-button-group>
+                </div>
+            </template>
+        </template>
+        <template if:false={documents}>
+            <p>No documents to display</p>
+        </template>
+    </lightning-card>
+</template>

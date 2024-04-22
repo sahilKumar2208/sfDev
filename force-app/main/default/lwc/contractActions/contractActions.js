@@ -1,11 +1,17 @@
-import { LightningElement, track, api } from "lwc";
+import { LightningElement, track, api, wire } from "lwc";
 import getAccessToken from "@salesforce/apex/AccessTokenController.getAccessToken";
 import getContractRecordDetails from "@salesforce/apex/ContractRecordDetailsController.getContractRecordDetails";
 import getContractDetails from "@salesforce/apex/ContractDetailsController.getContractDetails";
 import getLoggedInUserDetails from "@salesforce/apex/UtilsController.getLoggedInUserDetails";
 import approveContract from "@salesforce/apex/ContractDetailsController.approveContract";
 
+// Refresh related code 
+import { fireEvent } from "c/pubsub";
+import { CurrentPageReference } from "lightning/navigation";
+
 export default class ContractActions extends LightningElement {
+  @wire(CurrentPageReference) pageRef;
+
   @api recordId;
   @track contractDetailsPresent = false;
   @track showApproveUI = false;
@@ -140,6 +146,11 @@ export default class ContractActions extends LightningElement {
         this.isButtonDisabled = true;
         this.showSuccessMessage = true;
         this.errorMessage = null;
+
+        // Fire the refresh event
+        fireEvent(this.pageRef, "refreshEvent", {
+          /* optional data */
+        });
       } else {
         this.showErrorMessage = true;
         this.errorMessage = `Error: ${approvalResponse.body}`;
