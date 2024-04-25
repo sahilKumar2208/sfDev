@@ -35,4 +35,32 @@ public with sharing class ContractRecordDetailsController {
             throw new AuraHandledException('Error fetching record details: ' + e.getMessage());
         }
     }
+
+
+// Define a method to create a new intellosync_workflows__c record
+@AuraEnabled
+public static Integer createContractRecord(Map<String, Object> toolContractCreationResponse) {
+    try {
+        // Construct payload data for creating record
+        Intellosync_workflow__c newRecord = new Intellosync_workflow__c(
+            Name = toolContractCreationResponse.get('type') + ' - ' + toolContractCreationResponse.get('name'),
+            IntelloSync_workflow_name__c = toolContractCreationResponse.get('type') + ' - ' + toolContractCreationResponse.get('name'),
+            Intellosync_workflow_link__c = 'https://playground-contracts.intellosync.com/contract/' + toolContractCreationResponse.get('_id'),
+            Intellosync_workflow_type__c = (String) toolContractCreationResponse.get('type'),
+            Intellosync_workflow_id__c = (String) toolContractCreationResponse.get('_id')
+            // Add other fields as needed
+        );
+
+        // Insert the new record
+        insert newRecord;
+
+        // Return HTTP status code 201 for success
+        return 201;
+    } catch (Exception e) {
+        // Handle any exceptions and return HTTP status code 500 for failure
+        return 500;
+    }
+}
+
+
 }

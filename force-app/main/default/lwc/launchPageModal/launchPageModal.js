@@ -8,6 +8,7 @@ import uploadOwnerDetails from "@salesforce/apex/OwnerController.uploadOwnerDeta
 import getOpportunityDetails from "@salesforce/apex/OpportunityController.getOpportunityDetails";
 import createLaunchForm from "@salesforce/apex/LaunchFormController.createLaunchForm";
 import getAccessToken from "@salesforce/apex/AccessTokenController.getAccessToken";
+import createContractRecord from "@salesforce/apex/ContractRecordDetailsController.createContractRecord";
 
 // mapping of object prefixes to object types
 const recordIdPrefixToObjectType = {
@@ -56,6 +57,48 @@ export default class LaunchPageModal extends LightningModal {
     // this.iframeUrl = `http://localhost:8080/123/launch/${this.content.templateId}/${this.content.recordId}`
 
     console.log("ifrmae urlll issssss ----->", this.iframeUrl);
+
+    window.addEventListener(
+      "message",
+      this.handleMessageFromReactApp
+    );
+  }
+
+  disconnectedCallback() {
+    window.removeEventListener("message", this.handleMessageBound);
+  }
+
+  async handleMessageFromReactApp(event) {
+    try {
+      // Perform operations with the form data received from the React app
+      const data = event.data;
+      console.log("Message from React app:", data.contractCreationResponse);
+
+      // Create a record in Salesforce
+      const contractsalesforceRecordCreationResponse =
+        await createContractRecord({
+          toolContractCreationResponse: data.contractCreationResponse
+        });
+
+      console.log(
+        "contttt resss --->",
+        contractsalesforceRecordCreationResponse
+      );
+
+      // Check if the record creation was successful
+      if (contractsalesforceRecordCreationResponse === 201) {
+        console.log("Contract record created successfully");
+        event.source.postMessage("job-done", "*");
+      } else {
+        console.error(
+          "Error creating contract record:",
+          contractsalesforceRecordCreationResponse
+        );
+        event.source.postMessage("job-failed", "*");
+      }
+    } catch (error) {
+      console.error("Error creating contract record:", error);
+    }
   }
 
   handleOkay() {
@@ -159,7 +202,8 @@ export default class LaunchPageModal extends LightningModal {
         // Remove double quotes from this.launchId
         const launchIdWithoutQuotes = this.launchId.replace(/"/g, "");
         // this.iframeUrl = `http://localhost:8080/123/launch/${launchIdWithoutQuotes}`;
-        this.iframeUrl = `http://localhost:8080/123/launch/${launchIdWithoutQuotes}`;
+        // this.iframeUrl = `http://localhost:8080/123/launch/${launchIdWithoutQuotes}`;
+        this.iframeUrl = `http://localhost:5173/newContract/external/launch/${launchIdWithoutQuotes}`;
 
         if (this.iframeUrl) {
           this.isLoading = false;
