@@ -8,7 +8,7 @@ public with sharing class UtilsController {
 
         // Make the callout to the external REST API
         HttpRequest request = new HttpRequest();
-        request.setEndpoint('https://4d23-103-251-142-10.ngrok-free.app/api/v1/user');
+        request.setEndpoint('https://a72b-103-251-142-10.ngrok-free.app/api/v1/user');
         request.setMethod('GET');
         request.setHeader('Authorization', 'Bearer ' + accessToken); // 'authorization' should be 'Authorization'
         Http http = new Http();

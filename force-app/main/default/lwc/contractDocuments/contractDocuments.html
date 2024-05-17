@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
     <div class="slds-card">
         <div class="slds-card__header slds-grid slds-grid_align-spread slds-p-bottom_medium slds-theme_shade">
             <h2 class="slds-text-heading_medium slds-truncate">Contract Documents</h2>
@@ -24,5 +24,35 @@
             <p>No documents to display</p>
         </template>
     </lightning-card>
+    </div>
+</template> -->
+
+<template>
+    <div class="slds-card">
+        <div class="slds-card__header slds-grid slds-grid_align-spread slds-p-bottom_medium slds-theme_shade">
+            <h2 class="slds-text-heading_medium slds-truncate">Contract Documents</h2>
+        </div>
+            <template if:true={isContractDetailsPresent}>
+                <template for:each={documentDetails} for:item="documentItem">
+                    <div key={documentItem._id} class="slds-p-around_medium">
+                        <div class="slds-grid slds-wrap">
+                            <div class="slds-col slds-large-size_4-of-12 slds-medium-size_4-of-12 slds-size_12-of-12">
+                                <p><strong>File name - </strong> {documentItem.nameOfDocument}</p>
+                            </div>
+                            <div class="slds-col slds-large-size_4-of-12 slds-medium-size_4-of-12 slds-size_12-of-12">
+                            <lightning-button label="Download" onclick={handleDownload} data-document-id={documentItem.contractId}
+                                data-storage-id={documentItem.storageDocumentId} data-extension={documentItem.extension}></lightning-button>
+                            </div>
+                            <div class="slds-col slds-large-size_4-of-12 slds-medium-size_4-of-12 slds-size_12-of-12">
+                            <lightning-button label="Preview" variant="brand" onclick={handleView} data-document-id={documentItem.contractId}
+                                data-storage-id={documentItem.storageDocumentId} data-extension={documentItem.extension}></lightning-button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </template>
+            <template if:false={isContractDetailsPresent}>
+                <p>No documents to display</p>
+            </template>
     </div>
 </template>

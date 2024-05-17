@@ -1,24 +1,18 @@
 public with sharing class ContactController {
-    public ContactController() {
 
-    }
-
-    private static final String API_BASE_URL = 'https://4d23-103-251-142-10.ngrok-free.app/api/v1/salesforce/contact';
+    private static final String API_BASE_URL = 'https://a72b-103-251-142-10.ngrok-free.app/api/v1/salesforce/contact';
 
     // TODO: Add orgId as input argument after authentication code
 
     @AuraEnabled(cacheable=true)
-    public static String uploadContactDetails(String jsonData, String accessToken) {
+    public static Map<String, Object> uploadContactDetails(String jsonData, String accessToken) {
 
         String apiUrl = API_BASE_URL;
 
         HttpRequest request = new HttpRequest();
-
         request.setEndpoint(apiUrl);
         request.setMethod('PUT');
-
         request.setBody(jsonData);
-
         request.setHeader('Content-Type', 'application/json');
         request.setHeader('ngrok-skip-browser-warning', '69420');
         request.setHeader('authorization', 'Bearer ' + accessToken);
@@ -29,14 +23,21 @@ public with sharing class ContactController {
             HttpResponse response = http.send(request);
 
             if (response.getStatusCode() == 200) {
-                return response.getBody();
+                Map<String, Object> responseData = new Map<String, Object>();
+                responseData.put('statusCode', response.getStatusCode());
+                responseData.put('responseBody', response.getBody());
+                return responseData;
             } else {
-                System.debug('Error: ' + response.getStatus());
-                return 'Error: ' + response.getStatus();
+                Map<String, Object> errorData = new Map<String, Object>();
+                errorData.put('statusCode', response.getStatusCode());
+                errorData.put('errorMessage', 'Error: ' + response.getStatus());
+                return errorData;
             }
         } catch (Exception e) {
-            System.debug('Exception: ' + e.getMessage());
-            return 'Exception: ' + e.getMessage();
+            Map<String, Object> exceptionData = new Map<String, Object>();
+            exceptionData.put('statusCode', 500); // Internal Server Error
+            exceptionData.put('errorMessage', 'Exception: ' + e.getMessage());
+            return exceptionData;
         }
     }
 }

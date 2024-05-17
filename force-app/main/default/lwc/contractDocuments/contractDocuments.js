@@ -32,16 +32,24 @@ export default class ContractDocuments extends NavigationMixin(
 
   async connectedCallback() {
     const authToken =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhaGlsLmt1bWFyQGludGVsbG9zeW5jLmNvbSIsImlhdCI6MTcxMzE3MDYwOCwiZXhwIjoxNzE0MjUwNjA4fQ.MzfWSuy3mhu7yTmiCijijOpPaT3SVZg3DPQSjPeQ_Dk";
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhaGlsLmt1bWFyQGludGVsbG9zeW5jLmNvbSIsImlhdCI6MTcxNTc3ODI1NSwiZXhwIjoxNzQ3MzM1ODU1fQ.n5mjllU-DbplgTSiQUsNBnMCXOUtHX-eeAudcr-rOoQ";
 
     // Get CMT token
     let cmtToken = localStorage.getItem(`accessToken`);
     if (!cmtToken) {
-      cmtToken = await getAccessToken({ authServiceToken: authToken });
-      console.log("cmt token here !!", cmtToken);
-      // Store token in localStorage
-      localStorage.setItem(`accessToken`, cmtToken);
-      console.log("Access token stored in localStorage");
+      const cmtTokenResponse = await getAccessToken({
+        authServiceToken: authToken
+      });
+      console.log("cmt token here !!", cmtTokenResponse);
+
+      if (cmtTokenResponse.statusCode === 200) {
+        cmtToken = cmtTokenResponse.accessToken;
+        // Store token in localStorage
+        localStorage.setItem(`accessToken`, cmtTokenResponse.accessToken);
+        console.log("Access token stored in localStorage");
+      } else {
+        // show unauthorized !!! OR authorization falied with the given mail message.
+      }
     }
 
     this.cmtToken = cmtToken;
@@ -104,7 +112,6 @@ export default class ContractDocuments extends NavigationMixin(
 
     if (downloadResponse.statusCode === 200) {
       const downloadLink = downloadResponse.body.data;
-
 
       // Create a temporary anchor element
       const downloadAnchor = document.createElement("a");

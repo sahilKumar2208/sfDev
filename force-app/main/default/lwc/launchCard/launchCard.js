@@ -20,6 +20,7 @@ export default class LaunchCard extends NavigationMixin(LightningElement) {
   @track templateOptions = [];
   disableLaunchButton = true;
   @track isModalOpen = false;
+  @track cmtToken;
 
   get options() {
     return this.templateOptions;
@@ -44,20 +45,33 @@ export default class LaunchCard extends NavigationMixin(LightningElement) {
 
       //***** HARD CODING THE AUTH TOKEN *********//
       const authToken =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhaGlsLmt1bWFyQGludGVsbG9zeW5jLmNvbSIsImlhdCI6MTcxMzE3MDYwOCwiZXhwIjoxNzE0MjUwNjA4fQ.MzfWSuy3mhu7yTmiCijijOpPaT3SVZg3DPQSjPeQ_Dk";
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhaGlsLmt1bWFyQGludGVsbG9zeW5jLmNvbSIsImlhdCI6MTcxNTc3ODI1NSwiZXhwIjoxNzQ3MzM1ODU1fQ.n5mjllU-DbplgTSiQUsNBnMCXOUtHX-eeAudcr-rOoQ";
 
       // Get CMT token
       let cmtToken = localStorage.getItem(`accessToken`);
+      console.log("cmt token in local storage ---->", cmtToken);
       if (!cmtToken) {
-        cmtToken = await getAccessToken({
+        const cmtTokenResponse = await getAccessToken({
           authServiceToken: authToken
         });
-        console.log("cmt token here !!", cmtToken);
+        console.log("cmt token here !!", cmtTokenResponse);
 
-        // Store token in localStorage
-        localStorage.setItem(`accessToken`, cmtToken);
-        console.log("Access token stored in localStorage");
+        if (cmtTokenResponse.statusCode === 200) {
+          cmtToken = cmtTokenResponse.accessToken;
+          // Store token in localStorage
+          localStorage.setItem(`accessToken`, cmtTokenResponse.accessToken);
+          console.log("Access token stored in localStorage");
+        } else {
+          // show unauthorized !!! OR authorization falied with the given mail message.
+        }
       }
+
+      //make a cmt token variable and assign it value.
+      this.cmtToken = cmtToken;
+
+      console.log("cccccmmmmttttt token", cmtToken);
+
+      console.log("cmt token hai ???", this.cmtToken);
 
       // Fetching type of Salesforce object
       const objectType = this.getObjectTypeFromId(this.recordId);
@@ -65,7 +79,7 @@ export default class LaunchCard extends NavigationMixin(LightningElement) {
 
       // API call to fetch all the templates related to this object (options for combobox)
       if (objectType) {
-        this.fetchTemplates(objectType, cmtToken);
+        this.fetchTemplates(objectType, this.cmtToken);
       } else {
         console.error("Could not determine object type from record Id.");
       }

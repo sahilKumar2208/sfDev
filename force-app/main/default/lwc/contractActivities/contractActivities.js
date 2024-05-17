@@ -1,10 +1,9 @@
-import { LightningElement, track, api, wire} from 'lwc';
+import { LightningElement, track, api, wire } from "lwc";
 import getAccessToken from "@salesforce/apex/AccessTokenController.getAccessToken";
 import getContractRecordDetails from "@salesforce/apex/ContractRecordDetailsController.getContractRecordDetails";
 import getContractDetails from "@salesforce/apex/ContractDetailsController.getContractDetails";
 
-
-// refresh related 
+// refresh related
 import { registerListener, unregisterAllListeners } from "c/pubsub";
 import { CurrentPageReference } from "lightning/navigation";
 
@@ -21,19 +20,24 @@ export default class ContractActivities extends LightningElement {
     this.registerRefreshEventListener();
 
     const authToken =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhaGlsLmt1bWFyQGludGVsbG9zeW5jLmNvbSIsImlhdCI6MTcxMzE3MDYwOCwiZXhwIjoxNzE0MjUwNjA4fQ.MzfWSuy3mhu7yTmiCijijOpPaT3SVZg3DPQSjPeQ_Dk";
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhaGlsLmt1bWFyQGludGVsbG9zeW5jLmNvbSIsImlhdCI6MTcxNTc3ODI1NSwiZXhwIjoxNzQ3MzM1ODU1fQ.n5mjllU-DbplgTSiQUsNBnMCXOUtHX-eeAudcr-rOoQ";
 
     // Get CMT token
     let cmtToken = localStorage.getItem(`accessToken`);
     if (!cmtToken) {
-      cmtToken = await getAccessToken({
+      const cmtTokenResponse = await getAccessToken({
         authServiceToken: authToken
       });
-      console.log("cmt token here !!", cmtToken);
+      console.log("cmt token here !!", cmtTokenResponse);
 
-      // Store token in localStorage
-      localStorage.setItem(`accessToken`, cmtToken);
-      console.log("Access token stored in localStorage");
+      if (cmtTokenResponse.statusCode === 200) {
+        cmtToken = cmtTokenResponse.accessToken;
+        // Store token in localStorage
+        localStorage.setItem(`accessToken`, cmtTokenResponse.accessToken);
+        console.log("Access token stored in localStorage");
+      } else {
+        // show unauthorized !!! OR authorization falied with the given mail message.
+      }
     }
 
     this.cmtToken = cmtToken;

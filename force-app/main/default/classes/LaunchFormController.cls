@@ -1,5 +1,5 @@
 public with sharing class LaunchFormController {
-    private static final String API_BASE_URL = 'https://4d23-103-251-142-10.ngrok-free.app/api/v1/launchForm/salesforce';
+    private static final String API_BASE_URL = 'https://a72b-103-251-142-10.ngrok-free.app/api/v1/launchForm/salesforce';
 
     public LaunchFormController() {
         // Constructor
@@ -7,43 +7,42 @@ public with sharing class LaunchFormController {
 
     // TODO: Add orgId as input argument after authentication code
 
-    @AuraEnabled(cacheable=true)
-    public static String createLaunchForm(String templateId, String recordId, String accessToken) {
-        System.debug('templateId is --->' + templateId);
-        System.debug('recordId is ----->' + recordId);
+@AuraEnabled(cacheable=true)
+public static String createLaunchForm(String accessToken, String launchFormDataStr) {
+    System.debug('launchform string is --->' + launchFormDataStr);
+    System.debug('access token is ----->' + accessToken);
+    String apiUrl = API_BASE_URL;
+    HttpRequest request = new HttpRequest();
+    request.setEndpoint(apiUrl);
+    request.setMethod('POST');
 
-        String apiUrl = API_BASE_URL;
+    // Deserialize the launchFormData string into a map
+    Map<String, Object> launchFormData = (Map<String, Object>) JSON.deserializeUntyped(launchFormDataStr);
 
-        HttpRequest request = new HttpRequest();
+    // Create the request body map
+    Map<String, Object> requestBody = new Map<String, Object>();
 
-        request.setEndpoint(apiUrl);
-        request.setMethod('POST');
+    // Merge the launchFormData map with the requestBody map
+    requestBody.putAll(launchFormData);
 
-        // Set the request body
-        Map<String, String> requestBody = new Map<String, String>();
-        requestBody.put('templateId', templateId);
-        requestBody.put('recordId', recordId);
-        String requestBodyJson = JSON.serialize(requestBody);
-        request.setBody(requestBodyJson);
+    String requestBodyJson = JSON.serialize(requestBody);
+    request.setBody(requestBodyJson);
+    request.setHeader('Content-Type', 'application/json');
+    request.setHeader('ngrok-skip-browser-warning', '69420');
+    request.setHeader('authorization', 'Bearer ' + accessToken);
 
-        request.setHeader('Content-Type', 'application/json');
-        request.setHeader('ngrok-skip-browser-warning', '69420');
-        request.setHeader('authorization', 'Bearer ' + accessToken);
-
-        Http http = new Http();
-
-        try {
-            HttpResponse response = http.send(request);
-
-            if (response.getStatusCode() == 200) {
-                return response.getBody();
-            } else {
-                System.debug('Error: ' + response.getStatus());
-                return 'Error: ' + response.getStatus();
-            }
-        } catch (Exception e) {
-            System.debug('Exception: ' + e.getMessage());
-            return 'Exception: ' + e.getMessage();
+    Http http = new Http();
+    try {
+        HttpResponse response = http.send(request);
+        if (response.getStatusCode() == 200) {
+            return response.getBody();
+        } else {
+            System.debug('Error: ' + response.getStatus());
+            return 'Error: ' + response.getStatus();
         }
+    } catch (Exception e) {
+        System.debug('Exception: ' + e.getMessage());
+        return 'Exception: ' + e.getMessage();
     }
+}
 }

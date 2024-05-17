@@ -2,21 +2,18 @@ public with sharing class OpportunityController {
   public OpportunityController() {
   }
 
-  private static final String API_BASE_URL = 'https://4d23-103-251-142-10.ngrok-free.app/api/v1/salesforce/opportunity';
+  private static final String API_BASE_URL = 'https://a72b-103-251-142-10.ngrok-free.app/api/v1/salesforce/opportunity';
   private static final String AUTHORIZATION_HEADER = 'authorization';
   // TODO: Add orgId as input argument after authentication code
 
-  @AuraEnabled(cacheable=true)
-  public static String uploadOpportunityDetails(String jsonData, String accessToken) {
+@AuraEnabled(cacheable=true)
+public static Map<String, Object> uploadOpportunityDetails(String jsonData, String accessToken) {
     String apiUrl = API_BASE_URL;
 
     HttpRequest request = new HttpRequest();
-
     request.setEndpoint(apiUrl);
     request.setMethod('PUT');
-
     request.setBody(jsonData);
-
     request.setHeader('Content-Type', 'application/json');
     request.setHeader('ngrok-skip-browser-warning', '69420');
     request.setHeader(AUTHORIZATION_HEADER, 'Bearer ' + accessToken);
@@ -24,19 +21,27 @@ public with sharing class OpportunityController {
     Http http = new Http();
 
     try {
-      HttpResponse response = http.send(request);
+        HttpResponse response = http.send(request);
 
-      if (response.getStatusCode() == 200) {
-        return response.getBody();
-      } else {
-        System.debug('Error: ' + response.getStatus());
-        return 'Error: ' + response.getStatus();
-      }
+        if (response.getStatusCode() == 200) {
+            Map<String, Object> responseData = new Map<String, Object>();
+            responseData.put('statusCode', response.getStatusCode());
+            responseData.put('responseBody', response.getBody());
+            return responseData;
+        } else {
+            Map<String, Object> errorData = new Map<String, Object>();
+            errorData.put('statusCode', response.getStatusCode());
+            errorData.put('errorMessage', 'Error: ' + response.getStatus());
+            return errorData;
+        }
     } catch (Exception e) {
-      System.debug('Exception: ' + e.getMessage());
-      return 'Exception: ' + e.getMessage();
+        Map<String, Object> exceptionData = new Map<String, Object>();
+        exceptionData.put('statusCode', 500); // Internal Server Error
+        exceptionData.put('errorMessage', 'Exception: ' + e.getMessage());
+        return exceptionData;
     }
-  }
+}
+
   @AuraEnabled(cacheable=true)
   public static OpportunityWrapper getOpportunityDetails(String opportunityId) {
     OpportunityWrapper result = new OpportunityWrapper();
@@ -168,7 +173,8 @@ public with sharing class OpportunityController {
           ReportsToId,
           Title
         FROM Contact
-        WHERE AccountId = :opp.AccountId
+        WHERE AccountId = :opp.AccountId // se yahan account id se contacts nikaala jaa rha 
+        // which mean kii ek account ke saarey contact laa ke dega ye which will be an array
         ORDER BY CreatedDate
         LIMIT 1
       ];
@@ -230,15 +236,17 @@ public with sharing class OpportunityController {
         LIMIT 1
       ];
       result.owner = owner;
+      result.statusCode = 200;
     } catch (Exception e) {
       System.debug('Error in getOpportunityDetails: ' + e.getMessage()); // Log error message
       result.errorMsg = e.getMessage();
+      result.statusCode = 500; 
     }
     System.debug('Returning result: ' + result); // Log result before returning
     return result;
   }
 
-  public class OpportunityWrapper {
+public class OpportunityWrapper {
     @AuraEnabled
     public Opportunity opportunity;
     @AuraEnabled
@@ -249,5 +257,7 @@ public with sharing class OpportunityController {
     public User owner;
     @AuraEnabled
     public String errorMsg;
-  }
+    @AuraEnabled
+    public Integer statusCode;
+}
 }

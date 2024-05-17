@@ -17,20 +17,26 @@ export default class ContractDetails extends LightningElement {
 
   async connectedCallback() {
     const authToken =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhaGlsLmt1bWFyQGludGVsbG9zeW5jLmNvbSIsImlhdCI6MTcxMzE3MDYwOCwiZXhwIjoxNzE0MjUwNjA4fQ.MzfWSuy3mhu7yTmiCijijOpPaT3SVZg3DPQSjPeQ_Dk";
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhaGlsLmt1bWFyQGludGVsbG9zeW5jLmNvbSIsImlhdCI6MTcxNTc3ODI1NSwiZXhwIjoxNzQ3MzM1ODU1fQ.n5mjllU-DbplgTSiQUsNBnMCXOUtHX-eeAudcr-rOoQ";
 
     // Get CMT token
     let cmtToken = localStorage.getItem(`accessToken`);
     if (!cmtToken) {
-      cmtToken = await getAccessToken({
+      const cmtTokenResponse = await getAccessToken({
         authServiceToken: authToken
       });
-      console.log("cmt token here !!", cmtToken);
+      console.log("cmt token here !!", cmtTokenResponse);
 
-      // Store token in localStorage
-      localStorage.setItem(`accessToken`, cmtToken);
-      console.log("Access token stored in localStorage");
+      if (cmtTokenResponse.statusCode === 200) {
+        cmtToken = cmtTokenResponse.accessToken;
+        // Store token in localStorage
+        localStorage.setItem(`accessToken`, cmtTokenResponse.accessToken);
+        console.log("Access token stored in localStorage");
+      } else {
+        // show unauthorized !!! OR authorization falied with the given mail message.
+      }
     }
+
     console.log("reocrd id of contract details", this.recordId);
     // get the contract id // by getting the record details through salesforce
     await this.fetchContractRecord(this.recordId, cmtToken);
@@ -75,6 +81,7 @@ export default class ContractDetails extends LightningElement {
     this.stage = contractDetails.stage;
     this.priority = contractDetails.priority;
     this.status = contractDetails.status;
+    this.accessKey = contractDetails;
 
     //approvers ----START
     let approvers = {};
@@ -106,11 +113,9 @@ export default class ContractDetails extends LightningElement {
 
     // APPROVER ----END
 
+    //signatories ( internal + external ) --- START
 
-
-   //signatories ( internal + external ) --- START
-
-    let internalSignatories = {};
+    let internalSignatories = {}; // this will contain internal signatories
 
     workflowData?.signingSteps.forEach((step) => {
       const signingOrder = step.signingOrder;
@@ -148,11 +153,12 @@ export default class ContractDetails extends LightningElement {
     //TODO: EXTERNAL SIGNATORIES
 
     //participants ( internal )
-    const participantNames = workflowData?.participants.map((person) => person.fullName)
+    const participantNames = workflowData?.participants.map(
+      (person) => person.fullName
+    );
     console.log("participants are ---->", JSON.stringify(participantNames));
 
     this.participants = participantNames;
-
   }
 
   async fetchWorkflowData(workflowId, accessToken) {
