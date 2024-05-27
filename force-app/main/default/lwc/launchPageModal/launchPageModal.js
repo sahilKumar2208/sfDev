@@ -12,6 +12,7 @@ import createContractRecord from "@salesforce/apex/ContractRecordDetailsControll
 import getSFObjectId from "@salesforce/apex/DynamicQueryController.getSFObjectId";
 import getFieldValue from "@salesforce/apex/DynamicQueryController.getFieldValue";
 import fetchMappingConfig from "@salesforce/apex/MappingConfigController.fetchMappingConfig";
+import getParentReferenceName from "@salesforce/apex/MappingConfigController.getParentReferenceName";
 
 // mapping of object prefixes to object types
 const recordIdPrefixToObjectType = {
@@ -20,66 +21,10 @@ const recordIdPrefixToObjectType = {
   "006": "Opportunity"
 };
 
-const parentToChildMap = {
-  Account: [
-    "Contact",
-    "Asset",
-    "Case",
-    "Contract",
-    "Opportunity",
-    "Order",
-    "Quote"
-  ],
-  Case: ["CaseComment", "EmailMessage", "AttachedContentNote", "CaseHistory"],
-  Contact: ["Asset", "Case", "Contract", "Opportunity", "Order", "Quote"],
-  Opportunity: [
-    "OpportunityLineItem",
-    "Quote",
-    "Order",
-    "Note",
-    "AttachedContentNote"
-  ]
-};
-
-const dummyEntry = {
-  externalSystemType: "Salesforce",
-  orgId: "2344678",
-  salesforce: {
-    launchObjectType: "Opportunity",
-    relatedObjects: [
-      {
-        objectName: "Account"
-      },
-      {
-        objectName: "Contact",
-        filterConditions: [{ fieldName: "FirstName", fieldValue: "Sahil" }]
-      },
-      {
-        objectName: "Case"
-      }
-    ],
-    salesforceOrgId: "00Dxx0000001gPFEAY"
-  },
-  templateId: "234456578",
-  templateName: "Default Template",
-  templateVersion: 1,
-  templateFieldVersion: 1,
-  contractType: "Standard",
-  externalSystemAttributeName: "ContactEmail",
-  externalSystemAttributeType: "String",
-  templateAttributeId: "templateFieldId",
-  templateAttributeType: "String",
-  fieldConverter: {
-    conversionMethod: "none"
-  }
-};
-
-// const dummyEntry = {};
-
 export default class LaunchPageModal extends LightningModal {
   @api content;
   launchId;
-  iframeUrl;
+  @track iframeUrl;
   cmtToken;
   @track isLoading = true;
 
@@ -193,10 +138,26 @@ export default class LaunchPageModal extends LightningModal {
     // use the mapping and the retrieved data to get create Attribute VS its value mapping
     let attributeValueMap = {};
 
+    const queryStart = Date.now();
+    console.log("query startsss --->", queryStart);
+    let i = 1;
+
     for (const entry of mappingConfig.data) {
+      const prevQueryStart = Date.now();
       console.log("entry isss ---->", entry);
+
+      const salesforceFieldValue = await this.getLeafFieldValue(entry);
+      // attributeValueMap[entry.templateAttributeId] =
+      //   await this.getLeafFieldValue(entry);
+
+      // console.log(`time for ${i} query`, Date.now() - prevQueryStart, "value returned --->", attributeValueMap[entry.templateAttributeId]);
+      // i++;
+
       attributeValueMap[entry.templateAttributeId] =
-        await this.getLeafFieldValue(entry);
+        this.transformSalesforceData(
+          salesforceFieldValue,
+          entry.externalSystemAttributeType
+        );
     }
 
     console.log(
@@ -213,7 +174,7 @@ export default class LaunchPageModal extends LightningModal {
       templatename: mapping.templateName,
       templateType: mapping.contractType,
       templateVersion: mapping.templateVersion,
-      contractFields: this.processData(attributeValueMap),
+      contractFields: this.processData(attributeValueMap)
     };
 
     const launchFormDataStr = JSON.stringify(launchFormData);
@@ -223,7 +184,12 @@ export default class LaunchPageModal extends LightningModal {
       launchFormDataStr: launchFormDataStr
     });
 
-    console.log("this.launchId", this.launchId.replace(/"/g, ""));
+    console.log(
+      "this.launchId",
+      this.launchId.replace(/"/g, ""),
+      "queryEnds",
+      Date.now()
+    );
     // Remove double quotes from this.launchId
     const launchIdWithoutQuotes = this.launchId.replace(/"/g, "");
     // this.iframeUrl = `http://localhost:8080/123/launch/${launchIdWithoutQuotes}`;
@@ -233,6 +199,27 @@ export default class LaunchPageModal extends LightningModal {
     if (this.iframeUrl) {
       this.isLoading = false;
     }
+  }
+
+  transformSalesforceData(salesforceFieldValue, externalSystemAttributeType) {
+    //
+    console.log("I was called !!!");
+    if (externalSystemAttributeType === "Address") {
+      const address = {};
+      console.log("address type !!!");
+
+      address.addressLine1 = salesforceFieldValue.street;
+      address.city = salesforceFieldValue.city;
+      address.state = salesforceFieldValue.state;
+      address.postCode = salesforceFieldValue.postalCode;
+      address.country = salesforceFieldValue.country;
+
+      return address;
+    }else if( externalSystemAttributeType === "Date"){
+      const date = new Date(salesforceFieldValue).getTime();
+      return date;
+    }
+    return salesforceFieldValue;
   }
 
   processData(data) {
@@ -259,37 +246,52 @@ export default class LaunchPageModal extends LightningModal {
     return newData;
   }
 
-  async getLeafFieldValue() {
+  async getLeafFieldValue(entry) {
     // pass one entry at a time
-    const sourceObject = dummyEntry.salesforce.launchObjectType;
+    const sourceObject = entry.salesforce.launchObjectType;
     console.log("source object", sourceObject);
-    const relatedObjectsData = dummyEntry.salesforce.relatedObjects;
+    const relatedObjectsData = entry.salesforce.relatedObjects;
+    console.log(
+      " number of related objects time for  --->",
+      relatedObjectsData.length
+    );
     console.log(
       "related objects data --->",
       JSON.stringify(relatedObjectsData)
     );
-    const leafField = dummyEntry.externalSystemAttributeName;
+
+    const isDirectMapping = relatedObjectsData.length !== 0 ? false : true;
+    const leafObject = isDirectMapping
+      ? sourceObject
+      : relatedObjectsData[relatedObjectsData.length - 1].objectName;
+    console.log("leaf object --->", leafObject);
+    const leafField = entry.externalSystemAttributeName;
     console.log("leaf field ---->", leafField);
 
-    const relatedObjectsIds = await this.retrieveObjectIds(
-      sourceObject,
-      relatedObjectsData,
-      this.content.recordId
-    );
+    const relatedObjectsIds = isDirectMapping
+      ? []
+      : await this.retrieveObjectIds(
+          sourceObject,
+          relatedObjectsData,
+          this.content.recordId
+        );
 
     console.log("related objects ids ---->", JSON.stringify(relatedObjectsIds));
 
-    const leafObjectId = relatedObjectsIds[
-      relatedObjectsIds.length - 1
-    ].replace(/"/g, "");
+    const leafObjectId = isDirectMapping
+      ? this.content.recordId
+      : relatedObjectsIds[relatedObjectsIds.length - 1].replace(/"/g, "");
 
     const fieldValue = await getFieldValue({
       field: leafField,
-      objectName: "Case",
+      objectName: leafObject,
       condition: ` Id = '${leafObjectId}' `
     });
 
-    console.log("leaf field values iss --->", fieldValue[0][`${leafField}`]);
+    console.log(
+      `leaf field i.e.  ${leafField} value for leafObjet ${leafObject} iss --->`,
+      fieldValue[0][`${leafField}`]
+    );
 
     return fieldValue[0][`${leafField}`];
   }
@@ -325,6 +327,19 @@ export default class LaunchPageModal extends LightningModal {
 
       const obj2 = objectData2.objectName;
       let filterConditionObj2 = objectData2.filterConditions;
+      let sortingConditionObj2 =
+        objectData2.sortingField === undefined &&
+        objectData2.sortingOrder === undefined
+          ? null
+          : {
+              sortingField: objectData2.sortingField,
+              sortingOrder: objectData2.sortingOrder
+            };
+
+      console.log(
+        "sorting condition for obj 2 ---->",
+        JSON.stringify(sortingConditionObj2)
+      );
 
       if (
         filterConditionObj2 === undefined ||
@@ -336,18 +351,51 @@ export default class LaunchPageModal extends LightningModal {
       console.log("obj 2 ------>", obj2);
       console.log("filter condition for 2nd obj --->", filterConditionObj2);
 
-      let optionalCondition;
+      let filterCondition;
 
       if (filterConditionObj2 !== null) {
         console.log("HIIIIIIIIII");
-        optionalCondition = `${filterConditionObj2[0]?.fieldName} = '${filterConditionObj2[0]?.fieldValue}'`;
+        filterCondition = `${filterConditionObj2[0]?.fieldName} = '${filterConditionObj2[0]?.fieldValue}'`;
       }
 
-      console.log("optional condition --->", optionalCondition);
+      let sortingCondition;
+
+      if (sortingConditionObj2 !== null) {
+        sortingCondition = `${sortingConditionObj2.sortingField} ${sortingConditionObj2.sortingOrder}`;
+      }
+
+      console.log("sorting condition ---->", sortingCondition);
+
+      console.log("filter condition --->", filterCondition);
 
       // find relation btw o1 and o2
-      const isParentKnown = this.isParentKnown(obj1, obj2);
+
+      //	1. Find out who is parent
+      const isParentKnown = relatedObjectsData[i + 1].isChild;
       console.log("is parent known --->", isParentKnown);
+
+      // find mandatory condition i.e _Parent_Object's Reference Name
+      // const parent = isParentKnown ? obj1 : obj2;
+
+      // const child = isParentKnown ? obj2 : obj1;
+
+      // make api call to
+      //2. Find child relation (means find object which is child in the child relation array of the parent)
+      //3. Find field name from that (this will be the field that will reference the parent object)
+      // const parentObjReferenceName = await getParentReferenceName({
+      //   parent: parent,
+      //   child: child
+      // });
+
+      // Cases will be written over here: if P -> C is there parent reference name is different
+      // if C -> P is known parent reference name is different
+      const referenceFieldName = objectData2.referenceFieldName;
+
+      // console.log(
+      //   "parent object reference name iss --->",
+      //   parentObjReferenceName
+      // );
+      console.log("new code running !!!");
 
       if (isParentKnown === true) {
         // extract the next object's id
@@ -356,12 +404,19 @@ export default class LaunchPageModal extends LightningModal {
         console.log("Hiiii");
         const field = `Id`;
         const objectName = obj2;
-        const mandatoryCondition = ` ${obj1}Id = '${knownId}' `;
+        const mandatoryCondition = ` ${referenceFieldName} = '${knownId}' `; // this will change
+        console.log(
+          "mandatory",
+          mandatoryCondition,
+          "filter conddd",
+          filterCondition
+        );
         const dynamicQueryResult = await this.fetchSFObjectId(
           field,
           objectName,
           mandatoryCondition,
-          optionalCondition
+          filterCondition,
+          sortingCondition
         );
         // Process dynamicQueryResult
         console.log("dynamic query result --->", dynamicQueryResult);
@@ -371,14 +426,15 @@ export default class LaunchPageModal extends LightningModal {
         // extract the next object's id
         // add it to the array
         // update known id
-        const field = `${obj2}Id`;
+        const field = `${referenceFieldName}`; // this will change
         const objectName = obj1;
         const mandatoryCondition = ` Id = '${knownId}' `;
         const dynamicQueryResult = await this.fetchSFObjectId(
           field,
           objectName,
           mandatoryCondition,
-          optionalCondition
+          filterCondition,
+          sortingCondition
         );
         // Process dynamicQueryResult
         console.log("dynamic query result --->", dynamicQueryResult);
@@ -388,6 +444,31 @@ export default class LaunchPageModal extends LightningModal {
     }
 
     return relatedObjectsIds;
+  }
+
+  async fetchSFObjectId(
+    field,
+    objectName,
+    mandatoryCondition,
+    filterCondition,
+    sortingCondition
+  ) {
+    try {
+      console.log("fun2");
+      const res = await getSFObjectId({
+        field: field,
+        objectName: objectName,
+        mandatoryCondition: mandatoryCondition,
+        filterCondition: filterCondition,
+        sortingCondition: sortingCondition
+      });
+
+      console.log("res isss --->", res);
+      return res;
+    } catch (error) {
+      console.error("Error in executeQuery:", error);
+      throw error; // Optionally re-throw the error if you want to propagate it further
+    }
   }
 
   // async retrieveObjectIds(relatedObjects, knownRecordId) {
@@ -446,30 +527,6 @@ export default class LaunchPageModal extends LightningModal {
   //   }
   //   return relatedObjectsIds;
   // }
-
-  async fetchSFObjectId(field, objectName, mandatoryCondition) {
-    try {
-      console.log("fun2");
-      const res = await getSFObjectId({
-        field: field,
-        objectName: objectName,
-        mandatoryCondition: mandatoryCondition
-      });
-
-      console.log("res isss --->", res);
-      return res;
-    } catch (error) {
-      console.error("Error in executeQuery:", error);
-      throw error; // Optionally re-throw the error if you want to propagate it further
-    }
-  }
-
-  isParentKnown(parent, child) {
-    if (parent in parentToChildMap) {
-      return parentToChildMap[parent].includes(child);
-    }
-    return false;
-  }
 
   // async createLaunchForm(accessToken) {
   //   console.log("Hii token !! -->", accessToken);

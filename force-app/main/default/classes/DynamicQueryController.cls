@@ -3,17 +3,22 @@ public with sharing class DynamicQueryController {
    // SELECT _PLACE_HOLDER_1_ FROM _PLACE_HOLDER_2_ WHERE _PLACE_HOLDER_3_
    // and return the result of the query
    @AuraEnabled(cacheable=true)
-   public static List<SObject> getSFObjectId(String field, String objectName, String mandatoryCondition, String optionalCondition) {
+   public static List<SObject> getSFObjectId(String field, String objectName, String mandatoryCondition, String filterCondition, String sortingCondition) {
        // Construct the dynamic SOQL query
        String queryString = ' SELECT ' + field + ' FROM ' + objectName;
        System.debug('Initial Query String: ' + queryString);
        if (mandatoryCondition != null && mandatoryCondition.trim() != '') {
            queryString += ' WHERE ' + mandatoryCondition;
        }
-       if (optionalCondition != null && optionalCondition.trim() != '') {
+       if (filterCondition != null && filterCondition.trim() != '') {
         
-           queryString += ' AND ' + optionalCondition;
+            queryString += ' AND ' + filterCondition;
        }
+        if (sortingCondition != null && sortingCondition.trim() != '') {
+            queryString += ' ORDER BY ' + sortingCondition;
+       }
+
+       queryString += ' LIMIT 1 ';
        System.debug('Final Query String: ' + queryString);
        
        // Execute the query and return the Id of the first record
