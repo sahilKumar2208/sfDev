@@ -7,11 +7,20 @@
                 <div class="message">Loading...</div>
             </div>
         </template>
+        <template if:true={hasError}>
+            <div class="error-message">
+                <p>Some error occurred at backend side. Please try again later.</p>
+            </div>
+        </template>
         <template if:false={isLoading}>
-            <iframe src={iframeUrl} width="100%" height="600px" style="border: none;"></iframe>
+            <template if:false={hasError}>
+                <iframe src={iframeUrl} width="100%" height="600px" style="border: none;"></iframe>
+            </template>
         </template>
     </lightning-modal-body>
-    <!-- <lightning-modal-footer>
+    <!--
+    <lightning-modal-footer>
         <lightning-button label="OK" onclick={handleOkay}></lightning-button>
-    </lightning-modal-footer> -->
+    </lightning-modal-footer>
+    -->
 </template>

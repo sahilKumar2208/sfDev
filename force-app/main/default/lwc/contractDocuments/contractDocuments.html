@@ -32,6 +32,7 @@
         <div class="slds-card__header slds-grid slds-grid_align-spread slds-p-bottom_medium slds-theme_shade">
             <h2 class="slds-text-heading_medium slds-truncate">Contract Documents</h2>
         </div>
+        <template if:false={hasError}>
             <template if:true={isContractDetailsPresent}>
                 <template for:each={documentDetails} for:item="documentItem">
                     <div key={documentItem._id} class="slds-p-around_medium">
@@ -51,8 +52,20 @@
                     </div>
                 </template>
             </template>
+        </template>
             <template if:false={isContractDetailsPresent}>
                 <p>No documents to display</p>
             </template>
+
+            <!-- Display error message if fetchTemplateError is true -->
+            <template if:true={hasContractRecordError}>
+                <p class="error-message">Failed to fetch contract record</p>
+            </template> 
+
+            <!-- Display error message if fetchTemplateError is true -->
+            <template if:true={hasError}>
+                <p class="error-message">Some error occured !!!</p>
+            </template>
+
     </div>
 </template>
