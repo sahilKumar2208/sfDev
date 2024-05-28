@@ -9,8 +9,15 @@
                                 <div class="message">Loading...</div>
                             </div>
                         </template>
+                        <template if:false={hasError}>
                         <template if:false={isLoading}>
                             <iframe src={iframeUrl} width="100%" height="600px" style="border: none;"></iframe>
+                        </template>
+                        </template>
+                        <template if:true={hasError}>
+                            <div class="error-message">
+                                <p>An error occurred !!</p>
+                            </div>
                         </template>
         </div>
     

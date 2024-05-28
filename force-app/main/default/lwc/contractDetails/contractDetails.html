@@ -3,6 +3,7 @@
         <div class="slds-card__header slds-grid slds-grid_align-spread slds-p-bottom_medium slds-theme_shade">
             <h2 class="slds-text-heading_medium slds-truncate">Contract Details</h2>
         </div>
+        <template if:false={hasError}>
         <template if:true={contractDetailsPresent}>
             <div class="slds-card__body slds-card__body_inner">
                 <div class="slds-grid slds-grid_vertical slds-gutters_x-small">
@@ -161,6 +162,12 @@
                     </div>
                 </div>
             </div>
+        </template>
+        </template>
+
+        <!-- Display error message if fetchTemplateError is true -->
+        <template if:true={hasError}>
+            <p class="error-message">Some error occured !!!</p>
         </template>
     </div>
 </template>

@@ -7,7 +7,9 @@ import retrieveCurrentUserAccountDetails from "@salesforce/apex/AccountDetailsCo
 
 import { NavigationMixin } from "lightning/navigation";
 
-export default class ContractDocuments extends NavigationMixin(LightningElement) {
+export default class ContractDocuments extends NavigationMixin(
+  LightningElement
+) {
   @track isLoading;
   @track isContractDetailsPresent = false;
   @track contractId;
