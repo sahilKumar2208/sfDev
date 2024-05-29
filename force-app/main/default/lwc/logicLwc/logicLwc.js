@@ -56,6 +56,7 @@ export default class LogicLwc extends LightningModal {
     // Dummy data
     const relatedObjects = ["Opportunity", "Account", "Contact", "Case"];
     const fieldName = "ContactEmail";
+    console.log("field name ", fieldName);
 
     let relatedObjectsIds = [];
 

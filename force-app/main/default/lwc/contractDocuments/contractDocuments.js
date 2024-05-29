@@ -4,6 +4,7 @@ import getContractRecordDetails from "@salesforce/apex/ContractRecordDetailsCont
 import getContractDocumentsDetails from "@salesforce/apex/ContractDetailsController.getContractDocumentsDetails";
 import downloadDocument from "@salesforce/apex/ContractDetailsController.downloadDocument";
 import retrieveCurrentUserAccountDetails from "@salesforce/apex/AccountDetailsController.retrieveCurrentUserAccountDetails";
+import getExpiryTime from "@salesforce/apex/JwtDecoder.getExpiryTime";
 
 import { NavigationMixin } from "lightning/navigation";
 
@@ -70,7 +71,13 @@ export default class ContractDocuments extends NavigationMixin(
   async retrieveCmtToken(authToken) {
     let cmtToken = localStorage.getItem("accessToken");
 
-    if (!cmtToken) {
+    const expTime = await getExpiryTime({ jwtToken: cmtToken });
+
+    const currTime = Date.now();
+
+    const hasExpired = currTime - expTime > 0 ? true : false;
+
+    if (!cmtToken || hasExpired) {
       try {
         const cmtTokenResponse = await getAccessToken({
           authServiceToken: authToken

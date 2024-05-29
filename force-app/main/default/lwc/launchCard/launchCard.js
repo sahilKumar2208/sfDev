@@ -5,6 +5,7 @@ import MyModal from "c/launchPageModal";
 import COMPANY_LOGO_URL from "@salesforce/resourceUrl/company_logo";
 import retrieveCurrentUserAccountDetails from "@salesforce/apex/AccountDetailsController.retrieveCurrentUserAccountDetails";
 import getAccessToken from "@salesforce/apex/AccessTokenController.getAccessToken";
+import getExpiryTime from "@salesforce/apex/JwtDecoder.getExpiryTime";
 
 // getTemplates;  ---> DONE
 // getAccessToken ---> DONE
@@ -88,7 +89,13 @@ export default class LaunchCard extends NavigationMixin(LightningElement) {
   async retrieveCmtToken(authToken) {
     let cmtToken = localStorage.getItem("accessToken");
 
-    if (!cmtToken) {
+    const expTime = await getExpiryTime({ jwtToken: cmtToken });
+
+    const currTime = Date.now();
+
+    const hasExpired = currTime - expTime > 0 ? true : false;
+
+    if (!cmtToken || hasExpired) {
       try {
         const cmtTokenResponse = await getAccessToken({
           authServiceToken: authToken

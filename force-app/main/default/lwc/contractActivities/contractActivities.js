@@ -2,6 +2,7 @@ import { LightningElement, track, api, wire } from "lwc";
 import getAccessToken from "@salesforce/apex/AccessTokenController.getAccessToken";
 import getContractRecordDetails from "@salesforce/apex/ContractRecordDetailsController.getContractRecordDetails";
 import getContractDetails from "@salesforce/apex/ContractDetailsController.getContractDetails";
+import getExpiryTime from "@salesforce/apex/JwtDecoder.getExpiryTime";
 
 // refresh related
 import { registerListener, unregisterAllListeners } from "c/pubsub";
@@ -94,7 +95,14 @@ export default class ContractActivities extends LightningElement {
 
   async retrieveCmtToken(authToken) {
     let cmtToken = localStorage.getItem("accessToken");
-    if (!cmtToken) {
+
+    const expTime = await getExpiryTime({ jwtToken: cmtToken });
+
+    const currTime = Date.now();
+
+    const hasExpired = currTime - expTime > 0 ? true : false;
+
+    if (!cmtToken || hasExpired) {
       const cmtTokenResponse = await getAccessToken({
         authServiceToken: authToken
       });

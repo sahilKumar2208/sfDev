@@ -63,6 +63,7 @@ import createContractRecord from "@salesforce/apex/ContractRecordDetailsControll
 import getSFObjectId from "@salesforce/apex/DynamicQueryController.getSFObjectId";
 import getFieldValue from "@salesforce/apex/DynamicQueryController.getFieldValue";
 import fetchMappingConfig from "@salesforce/apex/MappingConfigController.fetchMappingConfig";
+import getExpiryTime from "@salesforce/apex/JwtDecoder.getExpiryTime";
 
 export default class LaunchPageModal extends LightningModal {
   @api content;
@@ -95,7 +96,13 @@ export default class LaunchPageModal extends LightningModal {
   async retrieveOrFetchToken(authToken) {
     let cmtToken = localStorage.getItem("accessToken");
 
-    if (!cmtToken) {
+    const expTime = await getExpiryTime({ jwtToken: cmtToken });
+
+    const currTime = Date.now();
+
+    const hasExpired = currTime - expTime > 0 ? true : false;
+
+    if (!cmtToken || hasExpired) {
       const cmtTokenResponse = await getAccessToken({
         authServiceToken: authToken
       });
@@ -281,7 +288,6 @@ export default class LaunchPageModal extends LightningModal {
       const referenceFieldName = objectData2.referenceFieldName;
 
       if (objectData2.isChild) {
-
         const dynamicQueryResult = await this.fetchSFObjectId(
           "Id",
           objectData2.objectName,
@@ -296,7 +302,6 @@ export default class LaunchPageModal extends LightningModal {
         relatedObjectsIds.push(dynamicQueryResult[0]["Id"]);
         knownId = dynamicQueryResult[0]["Id"];
       } else {
-
         const dynamicQueryResult = await this.fetchSFObjectId(
           referenceFieldName,
           objectData1.objectName,

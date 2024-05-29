@@ -4,9 +4,16 @@ import getContractRecordDetails from "@salesforce/apex/ContractRecordDetailsCont
 import getContractDetails from "@salesforce/apex/ContractDetailsController.getContractDetails";
 import getLoggedInUserDetails from "@salesforce/apex/UtilsController.getLoggedInUserDetails";
 import approveContract from "@salesforce/apex/ContractDetailsController.approveContract";
+import getExpiryTime from "@salesforce/apex/JwtDecoder.getExpiryTime";
 
 import { fireEvent } from "c/pubsub";
 import { CurrentPageReference } from "lightning/navigation";
+
+// getAccessToken ---> DONE
+// getContractRecordDetails
+// getContractDetails
+// getLoggedInUserDetails
+// approveContract
 
 export default class ContractActions extends LightningElement {
   @wire(CurrentPageReference) pageRef;
@@ -21,6 +28,8 @@ export default class ContractActions extends LightningElement {
   @track isButtonDisabled = false;
   @track showSuccessMessage = false;
   @track showErrorMessage = false;
+  @track authError = false;
+  @track hasError = false;
 
   async connectedCallback() {
     try {
@@ -40,7 +49,14 @@ export default class ContractActions extends LightningElement {
 
   async getCmtToken(authToken) {
     let cmtToken = localStorage.getItem("accessToken");
-    if (!cmtToken) {
+
+    const expTime = await getExpiryTime({ jwtToken : cmtToken});
+
+    const currTime = Date.now();
+
+    const hasExpired = currTime - expTime > 0 ? true : false;
+
+    if (!cmtToken || hasExpired) {
       const cmtTokenResponse = await getAccessToken({
         authServiceToken: authToken
       });
@@ -49,6 +65,8 @@ export default class ContractActions extends LightningElement {
         localStorage.setItem("accessToken", cmtToken);
         console.log("Access token stored in localStorage");
       } else {
+        this.authError = true;
+        this.hasError = true;
         throw new Error("Authorization failed");
       }
     }
@@ -58,49 +76,66 @@ export default class ContractActions extends LightningElement {
   async fetchContractRecord(recordId, accessToken) {
     try {
       const contractRecord = await getContractRecordDetails({ recordId });
+      console.log("contract record details are wic--->", contractRecord);
+
       await this.fetchContractDetails(
         contractRecord.Intellosync_workflow_id__c,
         accessToken
       );
     } catch (error) {
-      console.error("Error in fetching the contract record:", error);
+      console.error("Error in fetching the contract record: wic", error);
     }
   }
 
   async fetchContractDetails(contractId, accessToken) {
     try {
-      const contractDetails = await getContractDetails({
+      const contractDetailsResponse = await getContractDetails({
         contractId,
         accessToken
       });
-      this.contractId = contractDetails._id;
+      console.log("contract details response  wic--->", contractDetailsResponse);
+      if (contractDetailsResponse.statusCode === 200) {
+        this.contractId = contractDetailsResponse.body._id;
 
-      const user = await getLoggedInUserDetails({ accessToken });
-      this.userId = user.userId;
-      this.userName = user.fullName;
+        const userResponse = await getLoggedInUserDetails({ accessToken });
 
-      const userIdWithoutQuotes = this.userId.replace(/"/g, "");
-      this.showApproveUI = this.isApprovalRequired(
-        contractDetails.approvers,
-        userIdWithoutQuotes
-      );
+        console.log("userResonse wic", userResponse);
+
+        if (userResponse.statusCode === 200) {
+          this.userId = userResponse.userDetails.userId;
+          this.userName = userResponse.userDetails.fullName;
+
+          const userIdWithoutQuotes = this.userId.replace(/"/g, "");
+          this.showApproveUI = this.isApprovalRequired(
+            contractDetailsResponse.body.approvers,
+            userIdWithoutQuotes
+          );
+          console.log("approver req? wic", this.showApproveUI);
+        }else{
+          this.hasError = true;
+        }
+      } else {
+        this.hasError = true;
+      }
     } catch (error) {
-      console.error("Error in fetching the contract details:", error);
+      console.error("Error in fetching the contract details: wic", error);
+      this.hasError = true;
     }
   }
 
   isApprovalRequired(approversArray, userId) {
     const userEntry = this.findUserEntry(approversArray, userId);
+    console.log("userEntry wic", userEntry);
     if (!userEntry) {
       return false; // User not found
     }
-
+    // condition to find if any other entry is present in approver array which have already approved the contract
     const matchingEntries = approversArray.filter(
       (entry) =>
         entry.requestId === userEntry.requestId &&
         entry.approvalOrder === userEntry.approvalOrder &&
         entry.status === "Approved" &&
-        entry.id !== userEntry.id
+        entry.id !== `"${userEntry.id}"`
     );
 
     return matchingEntries.length === 0;
