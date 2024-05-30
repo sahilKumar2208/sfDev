@@ -219,7 +219,12 @@ export default class LaunchPageModal extends LightningModal {
         country: salesforceFieldValue.country
       };
     } else if (externalSystemAttributeType === "Date") {
+      // when externalSystemAttributeType === Date/Time then also this will run
       return new Date(salesforceFieldValue).getTime();
+    }else if (externalSystemAttributeType === "DateTime"){
+      // handle this case
+    }else if( externalSystemAttributeType === "Time"){
+      // handle this case
     }
     return salesforceFieldValue;
   }
