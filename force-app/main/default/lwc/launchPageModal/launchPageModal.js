@@ -70,6 +70,7 @@ export default class LaunchPageModal extends LightningModal {
   @track iframeUrl;
   @track isLoading = true;
   @track hasError = false;
+  @track hasMappingError = false;
 
   launchId;
   cmtToken;
@@ -96,13 +97,17 @@ export default class LaunchPageModal extends LightningModal {
   async retrieveOrFetchToken(authToken) {
     let cmtToken = localStorage.getItem("accessToken");
 
-    const expTime = await getExpiryTime({ jwtToken: cmtToken });
+    let expTime;
+
+    if (cmtToken) {
+      expTime = await getExpiryTime({ jwtToken: cmtToken });
+    }
 
     const currTime = Date.now();
 
     const hasExpired = currTime - expTime > 0 ? true : false;
 
-    if (!cmtToken || hasExpired) {
+    if (!cmtToken || (cmtToken && hasExpired)) {
       const cmtTokenResponse = await getAccessToken({
         authServiceToken: authToken
       });
@@ -221,9 +226,9 @@ export default class LaunchPageModal extends LightningModal {
     } else if (externalSystemAttributeType === "Date") {
       // when externalSystemAttributeType === Date/Time then also this will run
       return new Date(salesforceFieldValue).getTime();
-    }else if (externalSystemAttributeType === "DateTime"){
+    } else if (externalSystemAttributeType === "DateTime") {
       // handle this case
-    }else if( externalSystemAttributeType === "Time"){
+    } else if (externalSystemAttributeType === "Time") {
       // handle this case
     }
     return salesforceFieldValue;
@@ -292,16 +297,44 @@ export default class LaunchPageModal extends LightningModal {
       const objectData2 = relatedObjectsData[i + 1];
       const referenceFieldName = objectData2.referenceFieldName;
 
+      // filtering and sorting
+      let { filterConditions, sortingField, sortingOrder } = objectData2;
+      // Check filter conditions
+      let filterConditionObj2 = filterConditions?.length
+        ? filterConditions
+        : null;
+
+      let filterCondition = filterConditionObj2
+        ? `${filterConditionObj2[0]?.fieldName} = '${filterConditionObj2[0]?.fieldValue}'`
+        : null;
+
+      // Check sorting conditions
+      let sortingConditionObj2 =
+        sortingField !== undefined && sortingOrder !== undefined
+          ? { sortingField, sortingOrder }
+          : null;
+
+      let sortingCondition = sortingConditionObj2
+        ? `${sortingConditionObj2.sortingField} ${sortingConditionObj2.sortingOrder}`
+        : null;
+
       if (objectData2.isChild) {
         const dynamicQueryResult = await this.fetchSFObjectId(
           "Id",
           objectData2.objectName,
-          `${referenceFieldName} = '${knownId}'`
+          `${referenceFieldName} = '${knownId}'`,
+          filterCondition,
+          sortingCondition
         );
 
+        console.log("abxy", dynamicQueryResult);
+
         if (dynamicQueryResult.length === 0) {
+          console.log("I am an error !!!");
           // means the query didn't returned anything!!
-          this.hasError = true; // or show in UI that there is some error in the mapping.
+          this.isLoading = false;
+          this.hasMappingError = true; // or show in UI that there is some error in the mapping.
+          throw new Error("Mapping error: query returned no results.");
         }
 
         relatedObjectsIds.push(dynamicQueryResult[0]["Id"]);
@@ -310,7 +343,9 @@ export default class LaunchPageModal extends LightningModal {
         const dynamicQueryResult = await this.fetchSFObjectId(
           referenceFieldName,
           objectData1.objectName,
-          `Id = '${knownId}'`
+          `Id = '${knownId}'`,
+          filterCondition,
+          sortingCondition
         );
 
         if (dynamicQueryResult.length === 0) {
@@ -329,8 +364,8 @@ export default class LaunchPageModal extends LightningModal {
     field,
     objectName,
     mandatoryCondition,
-    filterCondition = null,
-    sortingCondition = null
+    filterCondition,
+    sortingCondition
   ) {
     try {
       return await getSFObjectId({

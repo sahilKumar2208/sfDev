@@ -1,115 +1,250 @@
-import LightningModal from "lightning/modal";
-import { api, track } from "lwc";
-import getSFObjectId from "@salesforce/apex/DynamicQueryController.getSFObjectId";
+import { LightningElement, track, api, wire } from "lwc";
+import getAccessToken from "@salesforce/apex/AccessTokenController.getAccessToken";
+import getContractRecordDetails from "@salesforce/apex/ContractRecordDetailsController.getContractRecordDetails";
+import getContractDetails from "@salesforce/apex/ContractDetailsController.getContractDetails";
+import getExpiryTime from "@salesforce/apex/JwtDecoder.getExpiryTime";
+import { registerListener, unregisterAllListeners } from "c/pubsub";
+import { CurrentPageReference } from "lightning/navigation";
 
-const parentToChildMap = {
-  Account: [
-    "Contact",
-    "Asset",
-    "Case",
-    "Contract",
-    "Opportunity",
-    "Order",
-    "Quote"
-  ],
-  Case: ["CaseComment", "EmailMessage", "AttachedContentNote", "CaseHistory"],
-  Contact: ["Asset", "Case", "Contract", "Opportunity", "Order", "Quote"],
-  Opportunity: [
-    "OpportunityLineItem",
-    "Quote",
-    "Order",
-    "Note",
-    "AttachedContentNote"
-  ]
-};
+export default class LogicLwc extends LightningElement {
+  // @wire(CurrentPageReference) pageRef;
+  // @api recordId;
+  // @track isLoading = false;
+  // @track approvers = [];
+  // @track cmtToken;
+  // @track showApprovers = false;
+  // @track hasError = false;
+  // @track authError = false;
+  // @track contractId;
 
-export default class LogicLwc extends LightningModal {
-  @track templateId;
-  @track recordId;
-  @track cmtToken;
-  @track iframeUrl;
-  @track isLoading;
-  @api content;
+  // async connectedCallback() {
+  //   this.registerRefreshEventListener();
 
-  // connected callback
-  async connectedCallback() {
-    this.recordId = this.content.recordId;
-    await this.createLaunchForm();
-  }
+  //   try {
+  //     this.isLoading = true;
+  //     const authToken = this.getAuthToken();
+  //     this.cmtToken = await this.retrieveCmtToken(authToken);
 
-  // rendered callback
-  renderedCallback() {
-    //
-  }
+  //     console.log("Reccc of contract details mnopq :", this.recordId);
 
-  // disconnected callback
-  disconnectedCallback() {
-    //
-  }
+  //     const contractDetails = await this.fetchContractRecord(
+  //       "a0CIR000026bLpj2AE",
+  //       this.cmtToken
+  //     );
+  //     console.log("sahil mnop---->", contractDetails);
+  //     this.handleContractStage(contractDetails);
+  //   } catch (error) {
+  //     this.handleError("Error in connectedCallback", error);
+  //   } finally {
+  //     this.isLoading = false;
+  //   }
+  // }
 
-  // create launch form
-  async createLaunchForm() {
-    // get mapping
+  // async fetchContractRecord(recordId, accessToken) {
+  //   try {
+  //     const contractRecord = await getContractRecordDetails({ recordId });
+  //     console.log("Contract record:", contractRecord);
+  //     this.contractId = contractRecord.Intellosync_workflow_id__c;
+  //     const contractDetails = await this.fetchContractDetails(
+  //       contractRecord.Intellosync_workflow_id__c,
+  //       accessToken
+  //     );
+  //     return contractDetails;
+  //   } catch (error) {
+  //     this.handleError("Error fetching the contract record", error);
+  //   }
+  // }
 
-    // create dynamic query
+  // async handleContractStage(contractDetails) {
+  //   const currentStage = contractDetails.stage;
+  //   console.log("Current stage:", currentStage);
 
-    // Dummy data
-    const relatedObjects = ["Opportunity", "Account", "Contact", "Case"];
-    const fieldName = "ContactEmail";
-    console.log("field name ", fieldName);
+  //   switch (currentStage) {
+  //     case "Draft":
+  //     case "Review":
+  //     case "Negotiation":
+  //       this.showInitialStageDetails(contractDetails);
+  //       break;
+  //     case "Approval":
+  //       console.log("This is approval Stage!!");
+  //       this.showApproverStageDetailsUI(contractDetails);
+  //       break;
+  //     case "Esign":
+  //       this.showEsignStageDetails(contractDetails);
+  //       break;
+  //     default:
+  //       console.log("Unknown stage:", currentStage);
+  //   }
+  // }
 
-    let relatedObjectsIds = [];
+  // showApproverStageDetailsUI(contractDetails) {
+  //   const approvers = contractDetails.approvers;
+  //   const approvalStepsArray = contractDetails.workflowId.approvalSteps;
 
-    relatedObjectsIds.push(this.recordId);
+  //   const approversWithFullName = approvers.map((approver) => {
+  //     let fullName = "";
 
-    let knownId = this.recordId;
+  //     for (const step of approvalStepsArray) {
+  //       const member = step.members.find(
+  //         (member) => member._id === approver.id
+  //       );
+  //       if (member) {
+  //         fullName = member.fullName;
+  //         break;
+  //       }
+  //     }
 
-    for (let i = 0; i < relatedObjects.length - 1; i++) {
-      const obj1 = relatedObjects[i];
-      const obj2 = relatedObjects[i + 1];
+  //     return {
+  //       ...approver,
+  //       fullName
+  //     };
+  //   });
 
-      // find relation btw o1 and o2
-      const isParentKnown = this.isParentKnown(obj1, obj2); // obj1 is parent entry in the map & obj2 will be searched in the children list of obj1
+  //   const newArr = this.filterApprovedRequests(approversWithFullName);
 
-      if (isParentKnown === true) {
-        // extract the next object's id
-        // add it to the array
-        // update known id
+  //   console.log("new Array king !!", JSON.stringify(newArr));
 
-        const field = "Id";
-        const objectName = obj2;
-        const condition = `${obj1}Id = ${knownId}`;
-        const dynamicQueryResult = getSFObjectId({
-          field: field,
-          objectName: objectName,
-          condition: condition
-        });
-        console.log("dynamic query result ---->", dynamicQueryResult);
+  //   this.approvers = [];
 
-      } else {
-        // extract the next object's id
-        // add it to the array
-        // update known id
-        const field = `${obj2}Id`;
-        const objectName = obj1;
-        const condition = `Id = ${knownId}`;
-        const dynamicQueryResult = getSFObjectId({
-          field: field,
-          objectName: objectName,
-          condition: condition
-        });
-        console.log("dynamic query result ---->", dynamicQueryResult);
+  //   this.showApprovers = true;
+  // }
 
-      }
-    }
+  // async fetchContractDetails(contractId, accessToken) {
+  //   try {
+  //     const response = await getContractDetails({ contractId, accessToken });
 
-    // use the mapping and the retrieved data to get create Attribute VS its value mapping
-  }
+  //     console.log("Contract details response:", response);
 
-  isParentKnown(parent, child) {
-    if (parent in parentToChildMap) {
-      return parentToChildMap[parent].includes(child);
-    }
-    return false;
-  }
+  //     if (response.statusCode === 200) {
+  //       const contractDetails = response.body;
+  //       console.log("Contract details from Intello:", contractDetails);
+  //       this.contractId = response.body._id;
+  //       return contractDetails;
+  //     } else {
+  //       this.handleError("Error in fetching contract details", response.body);
+  //     }
+  //   } catch (error) {
+  //     this.handleError("Error in fetching contract details", error);
+  //   }
+  // }
+
+  // handleError(message, error) {
+  //   console.error(message, error);
+  //   this.hasError = true;
+  //   this.isLoading = false;
+  // }
+
+  // getAuthToken() {
+  //   return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhaGlsLmt1bWFyQGludGVsbG9zeW5jLmNvbSIsImlhdCI6MTcxNTc3ODI1NSwiZXhwIjoxNzQ3MzM1ODU1fQ.n5mjllU-DbplgTSiQUsNBnMCXOUtHX-eeAudcr-rOoQ";
+  // }
+
+  // async retrieveCmtToken(authToken) {
+  //   let cmtToken = localStorage.getItem("accessToken");
+
+  //   let expTime;
+
+  //   if (cmtToken) {
+  //     expTime = await getExpiryTime({ jwtToken: cmtToken });
+  //   }
+
+  //   const currTime = Date.now();
+
+  //   const hasExpired = currTime > expTime;
+
+  //   if (!cmtToken || hasExpired) {
+  //     const cmtTokenResponse = await getAccessToken({
+  //       authServiceToken: authToken
+  //     });
+  //     console.log("CMT token response:", cmtTokenResponse);
+
+  //     if (cmtTokenResponse.statusCode === 200) {
+  //       cmtToken = cmtTokenResponse.accessToken;
+  //       localStorage.setItem("accessToken", cmtToken);
+  //       console.log("Access token stored in localStorage");
+  //     } else {
+  //       console.error("Authorization failed with the given mail.");
+  //       this.authError = true;
+  //       this.hasError = true;
+  //     }
+  //   }
+  //   return cmtToken;
+  // }
+
+  // registerRefreshEventListener() {
+  //   registerListener("refreshEvent", this.handleRefresh, this);
+  // }
+
+  // disconnectedCallback() {
+  //   unregisterAllListeners(this);
+  // }
+
+  // filterApprovedRequests(inputArray) {
+  //   console.log("Filtering approved requests");
+  //   const approvedRequests = new Set();
+  //   const filteredArray = [];
+
+  //   for (const entry of inputArray) {
+  //     const { requestId, status } = entry;
+
+  //     if (status === "Approved") {
+  //       approvedRequests.add(requestId);
+  //       filteredArray.push(entry);
+  //     } else if (!approvedRequests.has(requestId)) {
+  //       entry.status = "Pending";
+  //       filteredArray.push(entry);
+  //     }
+  //   }
+
+  //   return filteredArray;
+  // }
+
+  // // handleRefresh() {
+  // //   this.isLoading = true;
+  // //   this.approvers = [
+  // //     {
+  // //       id: "65e7ebd929caab7e4c88c23e",
+  // //       approvalOrder: 0,
+  // //       status: "Set",
+  // //       requestId: "6665ef8a810bc6f9e43c443d",
+  // //       _id: "6665ef8a810bc6f9e43c4441",
+  // //       fullName: "Tushar Sharma"
+  // //     }
+  // //   ];
+  // //   this.isLoading = false;
+  // // }
+
+  // async handleRefresh() {
+  //   this.isLoading = true; // Show the loading spinner
+  //   const contractDetails = await this.fetchContractDetails(
+  //     this.contractId,
+  //     this.cmtToken
+  //   );
+
+  //   console.log("kign contract details -->", contractDetails);
+    
+  //   this.updateContractDetailsUI(contractDetails);
+  //   this.isLoading = false;
+  // }
+
+  // updateContractDetailsUI(contractDetails) {
+  //   const currentStage = contractDetails.stage;
+
+  //   console.log("king !!", currentStage);
+  //   this.showInitialDetails = false;
+  //   this.showApprovers = false;
+  //   this.showEsigners = false;
+
+  //   if (
+  //     currentStage === "Draft" ||
+  //     currentStage === "Review" ||
+  //     currentStage === "Negotiation"
+  //   ) {
+  //     this.showInitialStageDetailsUI(contractDetails);
+  //   } else if (currentStage === "Approval") {
+  //     console.log("king apprrr!!");
+  //     this.showApproverStageDetailsUI(contractDetails);
+  //   } else if (currentStage === "Esign") {
+  //     this.showEsignStageDetailsUI(contractDetails);
+  //   }
+  // }
 }

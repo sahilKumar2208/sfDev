@@ -8,9 +8,7 @@ import getExpiryTime from "@salesforce/apex/JwtDecoder.getExpiryTime";
 
 import { NavigationMixin } from "lightning/navigation";
 
-export default class ContractDocuments extends NavigationMixin(
-  LightningElement
-) {
+export default class ContractDocuments extends NavigationMixin(LightningElement) {
   @track isLoading;
   @track isContractDetailsPresent = false;
   @track contractId;
@@ -23,18 +21,15 @@ export default class ContractDocuments extends NavigationMixin(
   @track hasError = false;
   @track hasContractRecordError = false;
 
-  // getAccessToken; ---> DONE
-  // getContractRecordDetails
-  // getContractDocumentsDetails
-  // downloadDocument
-
   async connectedCallback() {
     const userDetails = await this.fetchUserDetails();
     const authToken = await this.fetchAuthToken(userDetails.Email);
     this.cmtToken = await this.retrieveCmtToken(authToken);
 
     if (this.cmtToken) {
+      this.isLoading = true;
       await this.loadContractDetails();
+      this.isLoading = false;
     }
   }
 
@@ -71,13 +66,17 @@ export default class ContractDocuments extends NavigationMixin(
   async retrieveCmtToken(authToken) {
     let cmtToken = localStorage.getItem("accessToken");
 
-    const expTime = await getExpiryTime({ jwtToken: cmtToken });
+    let expTime;
+
+    if (cmtToken) {
+      expTime = await getExpiryTime({ jwtToken: cmtToken });
+    }
 
     const currTime = Date.now();
 
     const hasExpired = currTime - expTime > 0 ? true : false;
 
-    if (!cmtToken || hasExpired) {
+    if (!cmtToken || (cmtToken && hasExpired)) {
       try {
         const cmtTokenResponse = await getAccessToken({
           authServiceToken: authToken
@@ -102,6 +101,7 @@ export default class ContractDocuments extends NavigationMixin(
         );
         this.authError = true;
         this.hasError = true;
+        throw error;
       }
     }
 
@@ -197,33 +197,50 @@ export default class ContractDocuments extends NavigationMixin(
     } catch (error) {
       console.error("Error handling download:", error);
       this.hasError = true;
+      throw error;
     }
   }
 
   triggerDownload(downloadLink, contractId) {
-    const downloadAnchor = document.createElement("a");
-    downloadAnchor.href = downloadLink;
-    downloadAnchor.download = `${contractId}.pdf`;
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    document.body.removeChild(downloadAnchor);
+    try {
+      const downloadAnchor = document.createElement("a");
+      downloadAnchor.href = downloadLink;
+      downloadAnchor.download = `${contractId}.pdf`;
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      document.body.removeChild(downloadAnchor);
+    } catch (error) {
+      console.error("Error setting up download:", error);
+      this.hasError = true;
+      throw error;
+    }
   }
 
   handleView(event) {
     const contractId = event.target.dataset.documentId;
     const storageId = event.target.dataset.storageId;
+    const extension = event.target.dataset.extension;
+
     console.log(
       "Viewing document with contractId:",
       contractId,
       "and storageId:",
-      storageId
+      storageId,
+      "and extension:",
+      extension
     );
 
-    const viewUrl = `https://playground-contracts.intellosync.com/editor/collaborate/${contractId}/${storageId}/view`;
-    this[NavigationMixin.Navigate]({
-      type: "standard__webPage",
-      attributes: { url: viewUrl },
-      state: { nooverride: true }
-    });
+    if (extension.toLowerCase() === "pdf") {
+      // Call handleDownload function
+      this.handleDownload(event);
+    } else {
+      // Open the document in the editor
+      const viewUrl = `https://playground-contracts.intellosync.com/editor/collaborate/${contractId}/${storageId}/view`;
+      this[NavigationMixin.Navigate]({
+        type: "standard__webPage",
+        attributes: { url: viewUrl },
+        state: { nooverride: true }
+      });
+    }
   }
 }

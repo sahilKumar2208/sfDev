@@ -2,7 +2,7 @@ public with sharing class OpportunityController {
   public OpportunityController() {
   }
 
-  private static final String API_BASE_URL = 'https://a72b-103-251-142-10.ngrok-free.app/api/v1/salesforce/opportunity';
+  private static final String API_BASE_URL = 'https://19f5-157-37-132-40.ngrok-free.app/api/v1/salesforce/opportunity';
   private static final String AUTHORIZATION_HEADER = 'authorization';
   // TODO: Add orgId as input argument after authentication code
 

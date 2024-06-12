@@ -32,13 +32,16 @@ public with sharing class ContractDetailsController {
         return responseWrapper;
     }
 
-    @AuraEnabled(cacheable=true)
+    // @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static ResponseWrapper getContractDetails(String contractId, String accessToken) {
         ResponseWrapper responseWrapper = new ResponseWrapper();
 
         // Make the callout to the external REST API
         HttpRequest request = new HttpRequest();
         request.setEndpoint('https://cmt-backend-playground.intellosync.com/api/v1/contracts/' + contractId);
+        // request.setEndpoint('https://9a0e-103-251-142-10.ngrok-free.app/api/v1/contracts/' + contractId);
+
         request.setMethod('GET');
         request.setHeader('authorization', 'Bearer ' + accessToken);
         Http http = new Http();

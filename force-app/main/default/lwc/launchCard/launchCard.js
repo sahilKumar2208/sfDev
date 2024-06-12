@@ -89,13 +89,20 @@ export default class LaunchCard extends NavigationMixin(LightningElement) {
   async retrieveCmtToken(authToken) {
     let cmtToken = localStorage.getItem("accessToken");
 
-    const expTime = await getExpiryTime({ jwtToken: cmtToken });
+    // add check if the token is present then only get the expiry time
+    // if cmtToken !== null
+
+    let expTime;
+
+    if(cmtToken){
+     expTime = await getExpiryTime({ jwtToken: cmtToken });
+    }
 
     const currTime = Date.now();
 
     const hasExpired = currTime - expTime > 0 ? true : false;
 
-    if (!cmtToken || hasExpired) {
+    if (!cmtToken || (cmtToken && hasExpired)) {
       try {
         const cmtTokenResponse = await getAccessToken({
           authServiceToken: authToken

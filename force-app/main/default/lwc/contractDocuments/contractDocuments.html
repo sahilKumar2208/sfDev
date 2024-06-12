@@ -28,44 +28,101 @@
 </template> -->
 
 <template>
-    <div class="slds-card">
-        <div class="slds-card__header slds-grid slds-grid_align-spread slds-p-bottom_medium slds-theme_shade">
-            <h2 class="slds-text-heading_medium slds-truncate">Contract Documents</h2>
-        </div>
-        <template if:false={hasError}>
-            <template if:true={isContractDetailsPresent}>
-                <template for:each={documentDetails} for:item="documentItem">
-                    <div key={documentItem._id} class="slds-p-around_medium">
-                        <div class="slds-grid slds-wrap">
-                            <div class="slds-col slds-large-size_4-of-12 slds-medium-size_4-of-12 slds-size_12-of-12">
-                                <p><strong>File name - </strong> {documentItem.nameOfDocument}</p>
-                            </div>
-                            <div class="slds-col slds-large-size_4-of-12 slds-medium-size_4-of-12 slds-size_12-of-12">
-                            <lightning-button label="Download" onclick={handleDownload} data-document-id={documentItem.contractId}
-                                data-storage-id={documentItem.storageDocumentId} data-extension={documentItem.extension}></lightning-button>
-                            </div>
-                            <div class="slds-col slds-large-size_4-of-12 slds-medium-size_4-of-12 slds-size_12-of-12">
-                            <lightning-button label="Preview" variant="brand" onclick={handleView} data-document-id={documentItem.contractId}
-                                data-storage-id={documentItem.storageDocumentId} data-extension={documentItem.extension}></lightning-button>
-                            </div>
-                        </div>
-                    </div>
-                </template>
-            </template>
-        </template>
-            <template if:false={isContractDetailsPresent}>
-                <p>No documents to display</p>
-            </template>
-
-            <!-- Display error message if fetchTemplateError is true -->
-            <template if:true={hasContractRecordError}>
-                <p class="error-message">Failed to fetch contract record</p>
-            </template> 
-
-            <!-- Display error message if fetchTemplateError is true -->
-            <template if:true={hasError}>
-                <p class="error-message">Some error occured !!!</p>
-            </template>
-
+  <div class="slds-card">
+    <div
+      class="slds-card__header slds-grid slds-grid_align-spread slds-p-bottom_medium slds-theme_shade"
+    >
+      <div
+        class="slds-grid slds-grid_align-center slds-grid_vertical-align-center"
+      >
+        <img
+          src="/resource/1715869170000/company_logo"
+          alt="Company Logo"
+          height="20px"
+          width="50px"
+        />
+        <h2 class="slds-text-heading_medium slds-truncate slds-m-left_xx-small">
+          Contract Documents
+        </h2>
+      </div>
     </div>
+
+    <!-- Show loading screen when is loading is true -->
+    <template if:true={isLoading}>
+      <div class="loading-spinner">
+        <lightning-spinner
+          size="medium"
+          alternative-text="Loading"
+        ></lightning-spinner>
+        <div class="message">Loading...</div>
+      </div>
+    </template>
+
+    <template if:false={hasError}>
+      <template if:true={isContractDetailsPresent}>
+        <div class="container">
+          <template for:each={documentDetails} for:item="documentItem">
+            <div key={documentItem._id} class="card">
+              <div class="card-content">
+                <div class="document-info">
+                  <lightning-icon
+                    icon-name="doctype:attachment"
+                    alternative-text="Document"
+                    size="small"
+                    class="document-icon"
+                  ></lightning-icon>
+                  <p class="document-title">{documentItem.nameOfDocument}</p>
+                </div>
+                <div class="document-actions">
+                  <lightning-button-icon
+                    icon-name="utility:preview"
+                    alternative-text="Preview"
+                    onclick={handleView}
+                    data-document-id={documentItem.contractId}
+                    data-storage-id={documentItem.storageDocumentId}
+                    data-extension={documentItem.extension}
+                    class="action-button"
+                  ></lightning-button-icon>
+                  <lightning-button-icon
+                    icon-name="utility:download"
+                    alternative-text="Download"
+                    onclick={handleDownload}
+                    data-document-id={documentItem.contractId}
+                    data-storage-id={documentItem.storageDocumentId}
+                    data-extension={documentItem.extension}
+                    class="action-button"
+                  ></lightning-button-icon>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </template>
+    </template>
+
+    <template if:false={isLoading}>
+    <template if:false={isContractDetailsPresent}>
+      <div
+        class="no-documents-container slds-box slds-theme_shade slds-m-bottom_medium"
+      >
+        <p class="document-title">No documents to display</p>
+      </div>
+    </template>
+    </template>
+
+    <!-- Display error message if fetchTemplateError is true -->
+    <template if:true={hasContractRecordError}>
+      <div
+        class="no-documents-container slds-box slds-theme_error slds-m-bottom_medium"
+      >
+        <!-- <p class="error-message">Failed to fetch contract record</p> -->
+        <p>Failed to fetch contract record</p>
+      </div>
+    </template>
+
+    <!-- Display error message if fetchTemplateError is true -->
+    <template if:true={hasError}>
+      <p class="error-message">Some error occured !!!</p>
+    </template>
+  </div>
 </template>

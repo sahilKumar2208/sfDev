@@ -1,173 +1,387 @@
 <template>
-    <div class="slds-card">
-        <div class="slds-card__header slds-grid slds-grid_align-spread slds-p-bottom_medium slds-theme_shade">
-            <h2 class="slds-text-heading_medium slds-truncate">Contract Details</h2>
-        </div>
-        <template if:false={hasError}>
-        <template if:true={contractDetailsPresent}>
-            <div class="slds-card__body slds-card__body_inner">
-                <div class="slds-grid slds-grid_vertical slds-gutters_x-small">
-                    <div class="slds-grid slds-wrap">
-                        <div class="slds-col slds-size_1-of-2">
-                            <div class="slds-grid slds-grid_vertical-align-center">
-                                <div class="slds-col">
-                                    <div class="slds-media">
-                                        <div class="slds-media__figure">
-                                            <span class="slds-icon_container slds-icon-standard-stage">
-                                                <lightning-icon icon-name="standard:task"
-                                                    size="x-small"></lightning-icon>
-                                            </span>
-                                        </div>
-                                        <div class="slds-media__body">
-                                            <h2
-                                                class="slds-text-heading_small slds-text-color_success slds-p-bottom_xx-small">
-                                                Status:</h2>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="slds-col">
-                                    <div class="slds-text-body_regular">{status}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="slds-grid slds-wrap">
-                        <div class="slds-col slds-size_1-of-2">
-                            <div class="slds-grid slds-grid_vertical-align-center">
-                                <div class="slds-col">
-                                    <div class="slds-media">
-                                        <div class="slds-media__figure">
-                                            <span class="slds-icon_container slds-icon-standard-stage">
-                                                <lightning-icon icon-name="standard:stage"
-                                                    size="x-small"></lightning-icon>
-                                            </span>
-                                        </div>
-                                        <div class="slds-media__body">
-                                            <h2
-                                                class="slds-text-heading_small slds-text-color_success slds-p-bottom_xx-small">
-                                                Stage:</h2>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="slds-col">
-                                    <div class="slds-text-body_regular">{stage}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="slds-grid slds-wrap">
-                        <div class="slds-col slds-size_1-of-2">
-                            <div class="slds-grid slds-grid_vertical-align-center">
-                                <div class="slds-col">
-                                    <div class="slds-media">
-                                        <div class="slds-media__figure">
-                                            <span class="slds-icon_container slds-icon-standard-priority">
-                                                <lightning-icon icon-name="standard:priority"
-                                                    size="x-small"></lightning-icon>
-                                            </span>
-                                        </div>
-                                        <div class="slds-media__body">
-                                            <h2
-                                                class="slds-text-heading_small slds-text-color_success slds-p-bottom_xx-small">
-                                                Priority:</h2>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="slds-col">
-                                    <div class="slds-text-body_regular">{priority}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="slds-col slds-p-bottom_medium">
-                        <div class="slds-tile slds-tile_board">
-                            <div
-                                class="slds-tile__title slds-text-heading_small slds-text-color_success slds-p-around_x-small slds-m-bottom_xx-small slds-tile_board__header">
-                                <span class="slds-icon_container slds-icon-standard-people">
-                                    <!-- <lightning-icon icon-name="standard:people" size="x-small"></lightning-icon> -->
-                                </span>
-                                Approvers
-                            </div>
-                            <div class="slds-tile__detail slds-text-body_regular">
-                                <template for:each={approvers} for:item="lvl">
-                                    <div key={lvl.approverLevel} class="slds-p-bottom_small">
-                                        <p
-                                            class="slds-text-heading_small slds-text-color_success slds-p-around_x-small slds-m-bottom_xx-small slds-tile_board__header">
-                                            <span class="slds-icon_container slds-icon-utility-level-up">
-                                                <lightning-icon icon-name="utility:level-up"
-                                                    size="x-small"></lightning-icon>
-                                            </span>
-                                            Approver Level {lvl.approverLevel}
-                                        </p>
-                                        <template for:each={lvl.fullNames} for:item="name">
-                                            <p key={name} class="slds-text-body_regular slds-m-bottom_xx-small">
-                                                <span class="slds-icon_container slds-icon-standard-user">
-                                                    <lightning-icon icon-name="standard:user"
-                                                        size="x-small"></lightning-icon>
-                                                </span>
-                                                {name}
-                                            </p>
-                                        </template>
-                                    </div>
-                                </template>
-                            </div>
-                            <div
-                                class="slds-tile__title slds-text-heading_small slds-text-color_success slds-p-around_x-small slds-m-bottom_xx-small slds-tile_board__header">
-                                <span class="slds-icon_container slds-icon-standard-user">
-                                    <!-- <lightning-icon icon-name="standard:user" size="x-small"></lightning-icon> -->
-                                </span>
-                                Internal Signatories
-                            </div>
-                            <div class="slds-tile__detail slds-text-body_regular">
-                                <template for:each={internalSignatories} for:item="lvl">
-                                    <div key={lvl.signerLevel} class="slds-p-bottom_small">
-                                        <p
-                                            class="slds-text-heading_small slds-text-color_success slds-p-around_x-small slds-m-bottom_xx-small slds-tile_board__header">
-                                            <span class="slds-icon_container slds-icon-utility-level-up">
-                                                <lightning-icon icon-name="utility:level-up"
-                                                    size="x-small"></lightning-icon>
-                                            </span>
-                                            Signer Level {lvl.signerLevel}
-                                        </p>
-                                        <template for:each={lvl.fullNames} for:item="name">
-                                            <p key={name} class="slds-text-body_regular slds-m-bottom_xx-small">
-                                                <span class="slds-icon_container slds-icon-standard-user">
-                                                    <lightning-icon icon-name="standard:user"
-                                                        size="x-small"></lightning-icon>
-                                                </span>
-                                                {name}
-                                            </p>
-                                        </template>
-                                    </div>
-                                </template>
-                            </div>
-                            <div
-                                class="slds-tile__title slds-text-heading_small slds-text-color_success slds-p-around_x-small slds-m-bottom_xx-small slds-tile_board__header">
-                                <span class="slds-icon_container slds-icon-standard-user">
-                                    <lightning-icon icon-name="standard:user" size="x-small"></lightning-icon>
-                                </span>
-                                Internal Participants
-                            </div>
-                            <div class="slds-tile__detail slds-text-body_regular">
-                                <template for:each={participants} for:item="name">
-                                    <p key={name} class="slds-text-body_regular slds-m-bottom_xx-small">
-                                        <span class="slds-icon_container slds-icon-standard-user">
-                                            <lightning-icon icon-name="standard:user" size="x-small"></lightning-icon>
-                                        </span>
-                                        {name}
-                                    </p>
-                                </template>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </template>
-        </template>
-
-        <!-- Display error message if fetchTemplateError is true -->
-        <template if:true={hasError}>
-            <p class="error-message">Some error occured !!!</p>
-        </template>
+  <div class="slds-card">
+    <div
+      class="slds-card__header slds-grid slds-grid_align-spread slds-p-bottom_medium slds-theme_shade"
+    >
+      <div
+        class="slds-grid slds-grid_align-center slds-grid_vertical-align-center"
+      >
+        <img
+          src="/resource/1715869170000/company_logo"
+          alt="Company Logo"
+          height="20px"
+          width="50px"
+        />
+        <h2 class="slds-text-heading_medium slds-truncate slds-m-left_xx-small">
+          Contract Details
+        </h2>
+      </div>
     </div>
+    <template if:true={isLoading}>
+      <div class="loading-spinner">
+        <lightning-spinner
+          size="medium"
+          alternative-text="Loading"
+        ></lightning-spinner>
+        <div class="message">Loading...</div>
+      </div>
+    </template>
+    <template if:false={isLoading}>
+      <template if:false={hasError}>
+        <template if:true={contractDetailsPresent}>
+          <div class="slds-card__body slds-card__body_inner">
+            <div class="slds-grid slds-wrap slds-gutters_x-small">
+              <!-- First Row: Stage and Priority with space-between and full width coverage -->
+              <div class="slds-col slds-size_1-of-1">
+                <div class="slds-grid slds-wrap slds-justify_space-between">
+                  <!-- Stage -->
+                  <div
+                    class="slds-col slds-p-horizontal_small slds-size_1-of-2"
+                  >
+                    <h2
+                      class="slds-text-heading_small slds-text-color_success slds-p-bottom_xx-small"
+                    >
+                      <span class="slds-text-title_bold slds-text-color_default"
+                        >Status:
+                      </span>
+                      <span class="slds-text-body_regular"> {status}</span>
+                    </h2>
+                  </div>
+                  <!-- Priority -->
+                  <div
+                    class="slds-col slds-p-horizontal_small slds-size_1-of-2"
+                  >
+                    <h2
+                      class="slds-text-heading_small slds-text-color_success slds-p-bottom_xx-small"
+                    >
+                      <span class="slds-text-title_bold slds-text-color_default"
+                        >Priority:
+                      </span>
+                      <span class="slds-text-body_regular"> {priority}</span>
+                    </h2>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Second Row: Information about the stage with Icon -->
+              <div class="slds-col slds-size_1-of-1 slds-m-top_medium">
+                <div class="slds-media slds-media_center">
+                  <div class="slds-media__figure">
+                    <lightning-icon
+                      icon-name="utility:info"
+                      alternative-text="Information"
+                      size="small"
+                    ></lightning-icon>
+                  </div>
+                  <div class="slds-media__body slds-p-left_x-small">
+                    <div class="slds-text-body_regular">
+                      This contract is presently in
+                      <strong> {stage}</strong> stage.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Approvers -->
+              <!-- This is the outer container div that occupies the entire width of the column -->
+              <template if:true={showApprovers}>
+                <div class="slds-col slds-size_1-of-1 slds-p-bottom_medium">
+                  <!-- This is the main card component that holds the approvers information -->
+                  <div class="slds-card">
+                    <!-- This is the header section of the main card -->
+                    <div class="slds-card__header slds-grid">
+                      <header
+                        class="slds-media slds-media_center slds-has-flexi-truncate"
+                      >
+                        <div class="slds-media__figure">
+                          <!-- This is the icon displayed in the header of the main card -->
+                          <span
+                            class="slds-icon_container slds-icon-standard-people"
+                          >
+                            <lightning-icon
+                              icon-name="standard:people"
+                              size="small"
+                            ></lightning-icon>
+                          </span>
+                        </div>
+                        <div class="slds-media__body">
+                          <!-- This is the title of the main card -->
+                          <h2 class="slds-card__header-title">
+                            <span>Approvers</span>
+                          </h2>
+                        </div>
+                      </header>
+                    </div>
+                    <!-- This is the body section of the main card -->
+                    <div class="slds-card__body slds-card__body_inner">
+                      <!-- This loop iterates over each approver -->
+                      <template for:each={approvers} for:item="approver">
+                        <div key={approver.id} class="slds-p-bottom_small">
+                          <!-- This is a nested card component for each approver -->
+                          <div
+                            class="slds-card"
+                            style="
+                              border: 1px solid #686d76;
+                              background-color: #f9f9f9;
+                              box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+                            "
+                          >
+                            <div class="slds-card__body slds-card__body_inner">
+                              <div
+                                class="slds-media slds-p-around_x-small slds-border_bottom"
+                              >
+                                <div class="slds-media__figure">
+                                  <!-- This is the user icon displayed for each approver -->
+                                  <lightning-icon
+                                    icon-name="standard:user"
+                                    size="small"
+                                  ></lightning-icon>
+                                </div>
+                                <div class="slds-media__body">
+                                  <!-- This displays the name, level, and status of the approver -->
+                                  <p class="slds-text-body_regular">
+                                    <strong>Name:</strong> {approver.fullName}
+                                    <br />
+                                    <strong>Level: </strong>
+                                    {approver.approvalOrder}
+                                    <br />
+                                    <strong>Status: </strong> {approver.status}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Internal Signatories -->
+              <template if:true={showEsigners}>
+                <div class="slds-col slds-size_1-of-1 slds-p-bottom_medium">
+                  <div class="slds-card">
+                    <div class="slds-card__header slds-grid">
+                      <header
+                        class="slds-media slds-media_center slds-has-flexi-truncate"
+                      >
+                        <div class="slds-media__figure">
+                          <span
+                            class="slds-icon_container slds-icon-standard-user"
+                          >
+                            <lightning-icon
+                              icon-name="standard:user"
+                              size="small"
+                            ></lightning-icon>
+                          </span>
+                        </div>
+                        <div class="slds-media__body">
+                          <h2 class="slds-card__header-title">
+                            <span>Internal Signatories</span>
+                          </h2>
+                        </div>
+                      </header>
+                    </div>
+                    <div class="slds-card__body slds-card__body_inner">
+                      <template
+                        for:each={internalSignatories}
+                        for:item="signatory"
+                      >
+                        <div key={signatory.id} class="slds-p-bottom_small">
+                          <div
+                            class="slds-card"
+                            style="
+                              border: 1px solid #686d76;
+                              background-color: #f9f9f9;
+                              box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+                            "
+                          >
+                            <div class="slds-card__header slds-grid">
+                              <header
+                                class="slds-media slds-media_center slds-has-flexi-truncate"
+                              >
+                                <div class="slds-media__body">
+                                  <h2 class="slds-card__header-title">
+                                    <span>Signer: {signatory.fullName}</span>
+                                  </h2>
+                                </div>
+                              </header>
+                            </div>
+                            <div class="slds-card__body slds-card__body_inner">
+                              <div
+                                class="slds-media slds-p-around_x-small slds-border_bottom"
+                              >
+                                <div class="slds-media__figure">
+                                  <lightning-icon
+                                    icon-name="standard:user"
+                                    size="small"
+                                  ></lightning-icon>
+                                </div>
+                                <div class="slds-media__body">
+                                  <p class="slds-text-body_regular">
+                                    Name: {signatory.fullName}
+                                  </p>
+                                  <p class="slds-text-body_regular">
+                                    Signing Order: {signatory.signingOrder}
+                                  </p>
+                                  <p class="slds-text-body_regular">
+                                    Status: {signatory.status}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </template>
+
+              <!-- External signatories -->
+              <template if:true={showEsigners}>
+                <div class="slds-col slds-size_1-of-1 slds-p-bottom_medium">
+                  <div class="slds-card">
+                    <div class="slds-card__header slds-grid">
+                      <header
+                        class="slds-media slds-media_center slds-has-flexi-truncate"
+                      >
+                        <div class="slds-media__figure">
+                          <span
+                            class="slds-icon_container slds-icon-standard-user"
+                          >
+                            <lightning-icon
+                              icon-name="standard:user"
+                              size="small"
+                            ></lightning-icon>
+                          </span>
+                        </div>
+                        <div class="slds-media__body">
+                          <h2 class="slds-card__header-title">
+                            <span>External Signatories</span>
+                          </h2>
+                        </div>
+                      </header>
+                    </div>
+                    <div class="slds-card__body slds-card__body_inner">
+                      <template
+                        for:each={externalSignatories}
+                        for:item="signatory"
+                      >
+                        <div key={signatory.id} class="slds-p-bottom_small">
+                          <div
+                            class="slds-card"
+                            style="
+                              border: 1px solid #686d76;
+                              background-color: #f9f9f9;
+                              box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+                            "
+                          >
+                            <div class="slds-card__header slds-grid">
+                              <header
+                                class="slds-media slds-media_center slds-has-flexi-truncate"
+                              >
+                                <div class="slds-media__body">
+                                  <h2 class="slds-card__header-title">
+                                    <span>Signer: {signatory.fullName}</span>
+                                  </h2>
+                                </div>
+                              </header>
+                            </div>
+                            <div class="slds-card__body slds-card__body_inner">
+                              <div
+                                class="slds-media slds-p-around_x-small slds-border_bottom"
+                              >
+                                <div class="slds-media__figure">
+                                  <lightning-icon
+                                    icon-name="standard:user"
+                                    size="small"
+                                  ></lightning-icon>
+                                </div>
+                                <div class="slds-media__body">
+                                  <p class="slds-text-body_regular">
+                                    Name: {signatory.fullName}
+                                  </p>
+                                  <p class="slds-text-body_regular">
+                                    Signing Order: {signatory.signingOrder}
+                                  </p>
+                                  <p class="slds-text-body_regular">
+                                    Status: {signatory.status}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Internal Participants -->
+              <template if:true={showInitialDetails}>
+                <div class="slds-col slds-size_1-of-1 slds-p-bottom_medium">
+                  <div
+                    class="slds-card"
+                    style="
+                      border: 1px solid #686d76;
+                      background-color: #f9f9f9;
+                      box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+                    "
+                  >
+                    <div class="slds-card__header slds-grid">
+                      <header
+                        class="slds-media slds-media_center slds-has-flexi-truncate"
+                      >
+                        <div class="slds-media__figure">
+                          <span
+                            class="slds-icon_container slds-icon-standard-user"
+                          >
+                            <lightning-icon
+                              icon-name="standard:user"
+                              size="small"
+                            ></lightning-icon>
+                          </span>
+                        </div>
+                        <div class="slds-media__body">
+                          <h2 class="slds-card__header-title">
+                            <span>Internal Participants</span>
+                          </h2>
+                        </div>
+                      </header>
+                    </div>
+                    <div class="slds-card__body slds-card__body_inner">
+                      <template for:each={participants} for:item="name">
+                        <div
+                          key={name}
+                          class="slds-media slds-p-around_x-small slds-border_bottom"
+                        >
+                          <div class="slds-media__figure">
+                            <lightning-icon
+                              icon-name="standard:user"
+                              size="small"
+                            ></lightning-icon>
+                          </div>
+                          <div class="slds-media__body">
+                            <p class="slds-text-body_regular">{name}</p>
+                          </div>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </template>
+      </template>
+    </template>
+
+    <!-- Display error message if fetchTemplateError is true -->
+    <template if:true={hasError}>
+      <p class="error-message">Some error occured !!!</p>
+    </template>
+  </div>
 </template>

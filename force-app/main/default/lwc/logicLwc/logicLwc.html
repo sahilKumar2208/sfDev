@@ -1,3 +1,16 @@
 <template>
-    
+  <template if:true={isLoading}>
+    <div class="loading-spinner">
+      <lightning-spinner
+        size="medium"
+        alternative-text="Loading"
+      ></lightning-spinner>
+      <div class="message">Loading...</div>
+    </div>
+  </template>
+  <template if:false={isLoading}>
+   <template for:each={approvers} for:item="approver">
+    <div key={approver.id}>{approver.fullName}</div>
+   </template>
+  </template>
 </template>

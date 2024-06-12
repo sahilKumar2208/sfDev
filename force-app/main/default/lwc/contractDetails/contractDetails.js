@@ -1,246 +1,297 @@
-import { LightningElement, track, api } from "lwc";
+import { LightningElement, track, api, wire } from "lwc";
+import { CurrentPageReference } from "lightning/navigation";
+import { registerListener, unregisterAllListeners } from "c/pubsub";
+
 import getAccessToken from "@salesforce/apex/AccessTokenController.getAccessToken";
 import getContractRecordDetails from "@salesforce/apex/ContractRecordDetailsController.getContractRecordDetails";
 import getContractDetails from "@salesforce/apex/ContractDetailsController.getContractDetails";
-import getWorkflowDetails from "@salesforce/apex/ContractDetailsController.getWorkflowDetails";
 import retrieveCurrentUserAccountDetails from "@salesforce/apex/AccountDetailsController.retrieveCurrentUserAccountDetails";
 import getExpiryTime from "@salesforce/apex/JwtDecoder.getExpiryTime";
-export default class ContractDetails extends LightningElement {
-  @api recordId;
-  @track contractAge;
-  @track status;
-  @track stage;
-  @track priority;
-  @track approvers;
-  @track internalSignatories;
-  @track contractDetailsPresent = false;
-  @track participants;
-  @track cmtToken;
-  @track hasContractRecordError = false;
-  @track hasError = false;
+import COMPANY_LOGO_URL from "@salesforce/resourceUrl/company_logo";
 
-  async connectedCallback() {
-    try {
-      console.log("sahil !!!");
-      const userDetails = await this.fetchUserDetails();
-      const authToken = await this.fetchAuthToken(userDetails.Email);
-      this.cmtToken = await this.retrieveCmtToken(authToken);
-      console.log("Recordsahil ID sddcscs of contract details:", this.recordId);
-      await this.fetchContractRecord(this.recordId, this.cmtToken);
-      this.contractDetailsPresent = true;
-    } catch (error) {
-      console.error("An error occurred in connectedCallback:", error);
+// Constants
+const AUTH_TOKEN =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhaGlsLmt1bWFyQGludGVsb3N5bmMuY29tIiwiaWF0IjoxNzE1Nzc4MjU1LCJleHAiOjE3NDczMzU4NTV9.n5mjllU-DbplgTSiQUsNBnMCXOUtHX-eeAudcr-rOoQ";
+
+// Utility Functions
+function handleError(message, error) {
+  console.error(message, error);
+  this.hasError = true;
+}
+
+function filterApprovedRequests(inputArray) {
+  const approvedRequests = new Set();
+  const filteredArray = [];
+
+  for (const entry of inputArray) {
+    const { requestId, status } = entry;
+
+    if (status === "Approved") {
+      approvedRequests.add(requestId);
+      filteredArray.push(entry);
+    } else if (!approvedRequests.has(requestId)) {
+      entry.status = "Pending";
+      filteredArray.push(entry);
     }
   }
 
-  async fetchUserDetails() {
+  return filteredArray;
+}
+
+// Service Class
+class ContractService {
+  static async fetchUserDetails() {
     try {
       const userDetails = await retrieveCurrentUserAccountDetails();
-
-      if (userDetails && userDetails.Email) {
+      if (userDetails?.Email) {
         console.log("Current user's email:", userDetails.Email);
       } else {
         console.error("Email key is missing or empty in user details.");
-        this.authError = true;
-        this.hasError = true;
-        console.log("1qwerty");
+        throw new Error("Email key is missing or empty in user details.");
       }
-
       return userDetails;
     } catch (error) {
-      console.error("An error occurred while fetching user details:", error);
-      this.authError = true;
-      this.hasError = true;
-      console.log("2qwerty");
+      handleError("An error occurred while fetching user details", error);
       throw error;
     }
   }
 
-  async fetchAuthToken(email) {
-    console.log("email of current user", email);
-    // ***** HARD CODING THE AUTH TOKEN ********* //
-    const authToken =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhaGlsLmt1bWFyQGludGVsbG9zeW5jLmNvbSIsImlhdCI6MTcxNTc3ODI1NSwiZXhwIjoxNzQ3MzM1ODU1fQ.n5mjllU-DbplgTSiQUsNBnMCXOUtHX-eeAudcr-rOoQ";
-    console.log("Auth token:", authToken);
-    return authToken;
+  static async fetchAuthToken(email) {
+    console.log("Email of current user:", email);
+    console.log("Auth token:", AUTH_TOKEN);
+    return AUTH_TOKEN;
   }
 
-  async retrieveCmtToken(authToken) {
+  static async retrieveCmtToken(authToken) {
     let cmtToken = localStorage.getItem("accessToken");
+    let expTime;
 
-    const expTime = await getExpiryTime({ jwtToken: cmtToken });
+    if (cmtToken) {
+      expTime = await getExpiryTime({ jwtToken: cmtToken });
+    }
 
     const currTime = Date.now();
 
     const hasExpired = currTime - expTime > 0 ? true : false;
 
-    if (!cmtToken || hasExpired) {
+    if (!cmtToken || (cmtToken && hasExpired)) {
       try {
         const cmtTokenResponse = await getAccessToken({
           authServiceToken: authToken
         });
-
         if (cmtTokenResponse.statusCode === 200) {
           cmtToken = cmtTokenResponse.accessToken;
           localStorage.setItem("accessToken", cmtToken);
           console.log("Access token stored in localStorage");
         } else {
-          console.error(
+          handleError(
             "Authorization failed with status code:",
             cmtTokenResponse.statusCode
           );
-          this.authError = true;
-          this.hasError = true;
-          console.log("3qwerty");
         }
       } catch (error) {
-        console.error(
-          "An error occurred while retrieving the CMT token:",
-          error
-        );
-        this.authError = true;
-        this.hasError = true;
-        console.log("4qwerty");
+        handleError("An error occurred while retrieving the CMT token", error);
       }
     }
-
-    console.log("CMT token:", cmtToken);
     return cmtToken;
   }
 
-  async fetchContractRecord(recordId, accessToken) {
+  static async fetchContractRecord(recordId) {
     try {
       const contractRecord = await getContractRecordDetails({ recordId });
-      console.log("Contract record qwerty:", contractRecord);
-      await this.fetchContractDetails(
-        contractRecord.Intellosync_workflow_id__c,
-        accessToken
-      );
+      console.log("Contract record:", contractRecord);
+      return contractRecord;
     } catch (error) {
-      console.error("Error in fetching the contract record:", error);
-      this.hasError = true;
-      console.log("5qwerty");
-    }
-  }
-
-  async fetchContractDetails(contractId, accessToken) {
-    try {
-      const response = await getContractDetails({
-        contractId,
-        accessToken
-      });
-
-      console.log(" contract details response XYZ --->", response);
-
-      if (response.statusCode === 200) {
-        const contractDetails = response.body;
-        console.log("Contract details from Intello qwerty:", contractDetails);
-
-        const workflowId = contractDetails.workflowId._id;
-        const workflowDataResponse = await this.fetchWorkflowData(
-          workflowId,
-          accessToken
-        );
-
-        console.log("workflow data response qwerty---->", workflowDataResponse);
-
-        if (workflowDataResponse) {
-          const workflowData = workflowDataResponse;
-          console.log("Workflow details qwerty :", workflowData);
-          this.updateContractDetails(contractDetails, workflowData);
-        } else {
-          console.error(
-            "Error in fetching workflow details:",
-            workflowDataResponse
-          );
-          this.hasError = true;
-          console.log("100qwerty");
-        }
-      } else {
-        console.error("Error in fetching contract details:", response.body);
-        this.hasError = true;
-        console.log("6qwerty");
-      }
-    } catch (error) {
-      console.error("Error in fetching contract details:", error);
-      this.hasError = true;
-      console.log("7qwerty");
-    }
-  }
-
-  updateContractDetails(contractDetails, workflowData) {
-    this.stage = contractDetails.stage;
-    this.priority = contractDetails.priority;
-    this.status = contractDetails.status;
-
-    this.approvers = this.extractApprovers(workflowData?.approvalSteps);
-    this.internalSignatories = this.extractSignatories(
-      workflowData?.signingSteps
-    );
-    this.participants = workflowData?.participants.map(
-      (person) => person.fullName
-    );
-  }
-
-  extractApprovers(approvalSteps) {
-    const approvers = {};
-    approvalSteps.forEach((step) => {
-      const approvalOrder = step.approvalOrder;
-      const fullNames = step.members.map((member) => member.fullName);
-
-      if (approvers[approvalOrder]) {
-        approvers[approvalOrder].fullNames.push(...fullNames);
-      } else {
-        approvers[approvalOrder] = {
-          approverLevel: approvalOrder,
-          fullNames
-        };
-      }
-    });
-    return Object.values(approvers);
-  }
-
-  extractSignatories(signingSteps) {
-    const internalSignatories = {};
-    signingSteps.forEach((step) => {
-      const signingOrder = step.signingOrder;
-      const fullNames = step.members.map((member) => member.fullName);
-
-      if (internalSignatories[signingOrder]) {
-        internalSignatories[signingOrder].fullNames.push(...fullNames);
-      } else {
-        internalSignatories[signingOrder] = {
-          signerLevel: signingOrder,
-          fullNames
-        };
-      }
-    });
-    return Object.values(internalSignatories);
-  }
-
-  async fetchWorkflowData(workflowId, accessToken) {
-    try {
-      const response = await getWorkflowDetails({
-        workflowId,
-        accessToken
-      });
-
-      if (response.statusCode === 200) {
-        const workflowData = response.body;
-        return workflowData;
-      }
-      //ELSE
-      else {
-        console.error("Error in fetching workflow data:", response.body);
-        this.hasError = true;
-        console.log("8qwerty");
-        throw new Error(`Error in fetching workflow data: ${response.body}`);
-      }
-    } catch (error) {
-      console.error("Error in fetching workflow data:", error);
-      this.hasError = true;
-      console.log("9qwerty");
+      handleError("Error in fetching the contract record", error);
       throw error;
     }
+  }
+
+  static async fetchContractDetails(contractId, accessToken) {
+    try {
+      const response = await getContractDetails({ contractId, accessToken });
+      if (response.statusCode === 200) {
+        console.log("Contract details from Intello:", response.body);
+        return response.body;
+      } else {
+        handleError("Error in fetching contract details", response.body);
+        throw new Error("Error in fetching contract details");
+      }
+    } catch (error) {
+      handleError("Error in fetching contract details", error);
+      throw error;
+    }
+  }
+}
+
+// Component Class
+export default class ContractDetails extends LightningElement {
+  @wire(CurrentPageReference) pageRef;
+  @track isLoading = false;
+  @track compayLogoUrl;
+  @api recordId;
+  @track contractAge;
+  @track status;
+  @track stage;
+  @track priority;
+  @track contractDetailsPresent = false;
+  @track cmtToken;
+  @track hasContractRecordError = false;
+  @track hasError = false;
+  @track contractId;
+  @track approvers = [];
+  @track internalSignatories = [];
+  @track externalSignatories = [];
+  @track participants = [];
+
+  @track showInitialDetails = false;
+  @track showApprovers = false;
+  @track showEsigners = false;
+
+  connectedCallback() {
+    registerListener("refreshSecondComponent", this.handleRefresh, this);
+    this.initializeComponent();
+  }
+
+  disconnectedCallback() {
+    unregisterAllListeners(this);
+  }
+
+  async initializeComponent() {
+    try {
+      this.compayLogoUrl = COMPANY_LOGO_URL;
+      console.log("logo url --->", this.compayLogoUrl);
+      this.isLoading = true;
+      const userDetails = await ContractService.fetchUserDetails();
+      const authToken = await ContractService.fetchAuthToken(userDetails.Email);
+      this.cmtToken = await ContractService.retrieveCmtToken(authToken);
+      const contractRecord = await ContractService.fetchContractRecord(
+        this.recordId
+      );
+      // assign contractId variable its value
+      this.contractId = contractRecord.Intellosync_workflow_id__c;
+      const contractDetails = await ContractService.fetchContractDetails(
+        contractRecord.Intellosync_workflow_id__c,
+        this.cmtToken
+      );
+
+      console.log("reached eded", contractDetails);
+      await this.updateContractDetailsUI(contractDetails);
+      this.contractDetailsPresent = true;
+    } catch (error) {
+      this.handleError("An error occurred in initializeComponent", error);
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  async handleRefresh() {
+    this.isLoading = true;
+    try {
+      const contractDetails = await ContractService.fetchContractDetails(
+        this.contractId,
+        this.cmtToken
+      );
+      console.log("fetched updated contract details --->", contractDetails);
+      this.updateContractDetailsUI(contractDetails);
+    } catch (error) {
+      this.handleError("Error refreshing component", error);
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  updateContractDetailsUI(contractDetails) {
+    const currentStage = contractDetails.stage;
+
+    this.showInitialDetails = false;
+    this.showApprovers = false;
+    this.showEsigners = false;
+
+    //set status, priority and stage
+    this.status = contractDetails.status;
+    this.priority = contractDetails.priority;
+    this.stage = contractDetails.stage;
+
+    switch (currentStage) {
+      case "Draft":
+      case "Review":
+      case "Negotiation":
+        this.showInitialStageDetailsUI(contractDetails);
+        break;
+      case "Approval":
+        this.showApproverStageDetailsUI(contractDetails);
+        break;
+      case "Esign":
+        this.showEsignStageDetailsUI(contractDetails);
+        break;
+      default:
+        console.log("Unknown stage:", currentStage);
+    }
+  }
+
+  showInitialStageDetailsUI(contractDetails) {
+    const allParticipantsArray = [
+      ...contractDetails.participants,
+      ...contractDetails.externalParticipants
+    ];
+    this.participants = allParticipantsArray.map((person) => person.fullName);
+    this.showInitialDetails = true;
+  }
+
+  showApproverStageDetailsUI(contractDetails) {
+    const approvers = contractDetails.approvers;
+    const approvalStepsArray = contractDetails.workflowId.approvalSteps;
+
+    const approversWithFullName = approvers.map((approver) => {
+      let fullName = "";
+
+      for (const step of approvalStepsArray) {
+        const member = step.members.find(
+          (member) => member._id === approver.id
+        );
+        if (member) {
+          fullName = member.fullName;
+          break;
+        }
+      }
+
+      return {
+        ...approver,
+        fullName
+      };
+    });
+
+    const newArr = [...filterApprovedRequests(approversWithFullName)];
+
+    console.log("ededededed", JSON.stringify(newArr));
+
+    this.approvers = newArr;
+    this.showApprovers = true;
+  }
+
+  showEsignStageDetailsUI(contractDetails) {
+    const internalSignatories = [...contractDetails.signatories];
+    const externalSignatories = [...contractDetails.externalSignatories];
+
+    this.internalSignatories = internalSignatories.map((signatory) => {
+      const { id, signingOrder, status } = signatory;
+      const { _id, fullName, email } = id;
+      return { id: _id, fullName, signingOrder, status };
+    });
+
+    this.externalSignatories = externalSignatories.map((signatory) => {
+      const { id, signingOrder, status } = signatory;
+      const { _id, fullName, email } = id;
+      return { id: _id, fullName, signingOrder, status };
+    });
+
+    this.showEsigners = true;
+  }
+
+  handleError(message, error) {
+    handleError(message, error);
+    this.isLoading = false;
+    this.hasError = true;
   }
 }

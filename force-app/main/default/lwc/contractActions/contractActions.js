@@ -9,12 +9,6 @@ import getExpiryTime from "@salesforce/apex/JwtDecoder.getExpiryTime";
 import { fireEvent } from "c/pubsub";
 import { CurrentPageReference } from "lightning/navigation";
 
-// getAccessToken ---> DONE
-// getContractRecordDetails
-// getContractDetails
-// getLoggedInUserDetails
-// approveContract
-
 export default class ContractActions extends LightningElement {
   @wire(CurrentPageReference) pageRef;
 
@@ -30,14 +24,17 @@ export default class ContractActions extends LightningElement {
   @track showErrorMessage = false;
   @track authError = false;
   @track hasError = false;
+  @track isLoading;
 
   async connectedCallback() {
     try {
+      this.isLoading = true;
       const authToken = this.getAuthToken();
       this.cmtToken = await this.getCmtToken(authToken);
 
       await this.fetchContractRecord(this.recordId, this.cmtToken);
       this.contractDetailsPresent = true;
+      this.isLoading = false;
     } catch (error) {
       console.error("Error in connectedCallback:", error);
     }
@@ -50,13 +47,17 @@ export default class ContractActions extends LightningElement {
   async getCmtToken(authToken) {
     let cmtToken = localStorage.getItem("accessToken");
 
-    const expTime = await getExpiryTime({ jwtToken : cmtToken});
+    let expTime;
+
+    if (cmtToken) {
+      expTime = await getExpiryTime({ jwtToken: cmtToken });
+    }
 
     const currTime = Date.now();
 
     const hasExpired = currTime - expTime > 0 ? true : false;
 
-    if (!cmtToken || hasExpired) {
+    if (!cmtToken || (cmtToken && hasExpired)) {
       const cmtTokenResponse = await getAccessToken({
         authServiceToken: authToken
       });
@@ -84,6 +85,7 @@ export default class ContractActions extends LightningElement {
       );
     } catch (error) {
       console.error("Error in fetching the contract record: wic", error);
+      this.hasError = true;
     }
   }
 
@@ -93,7 +95,10 @@ export default class ContractActions extends LightningElement {
         contractId,
         accessToken
       });
-      console.log("contract details response  wic--->", contractDetailsResponse);
+      console.log(
+        "contract details response  wic--->",
+        contractDetailsResponse
+      );
       if (contractDetailsResponse.statusCode === 200) {
         this.contractId = contractDetailsResponse.body._id;
 
@@ -111,7 +116,7 @@ export default class ContractActions extends LightningElement {
             userIdWithoutQuotes
           );
           console.log("approver req? wic", this.showApproveUI);
-        }else{
+        } else {
           this.hasError = true;
         }
       } else {
@@ -129,7 +134,6 @@ export default class ContractActions extends LightningElement {
     if (!userEntry) {
       return false; // User not found
     }
-    // condition to find if any other entry is present in approver array which have already approved the contract
     const matchingEntries = approversArray.filter(
       (entry) =>
         entry.requestId === userEntry.requestId &&
@@ -156,6 +160,7 @@ export default class ContractActions extends LightningElement {
         this.isButtonDisabled = true;
         this.showSuccessMessage = true;
         fireEvent(this.pageRef, "refreshEvent", {});
+        fireEvent(this.pageRef, "refreshSecondComponent", {});
       } else {
         this.showErrorMessage = true;
         this.errorMessage = `Error: ${approvalResponse.body}`;

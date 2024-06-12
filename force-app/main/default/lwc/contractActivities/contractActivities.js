@@ -18,6 +18,7 @@ export default class ContractActivities extends LightningElement {
   @track hasError;
   @track authError;
 
+
   async connectedCallback() {
     this.registerRefreshEventListener();
 
@@ -96,13 +97,18 @@ export default class ContractActivities extends LightningElement {
   async retrieveCmtToken(authToken) {
     let cmtToken = localStorage.getItem("accessToken");
 
-    const expTime = await getExpiryTime({ jwtToken: cmtToken });
+
+    let expTime;
+
+    if (cmtToken) {
+      expTime = await getExpiryTime({ jwtToken: cmtToken });
+    }
 
     const currTime = Date.now();
 
     const hasExpired = currTime - expTime > 0 ? true : false;
 
-    if (!cmtToken || hasExpired) {
+    if (!cmtToken || (cmtToken && hasExpired)) {
       const cmtTokenResponse = await getAccessToken({
         authServiceToken: authToken
       });
