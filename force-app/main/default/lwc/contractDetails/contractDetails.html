@@ -331,6 +331,7 @@
                       box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
                     "
                   >
+                  <!--Show list of internal participants -->
                     <div class="slds-card__header slds-grid">
                       <header
                         class="slds-media slds-media_center slds-has-flexi-truncate"
@@ -354,6 +355,47 @@
                     </div>
                     <div class="slds-card__body slds-card__body_inner">
                       <template for:each={participants} for:item="name">
+                        <div
+                          key={name}
+                          class="slds-media slds-p-around_x-small slds-border_bottom"
+                        >
+                          <div class="slds-media__figure">
+                            <lightning-icon
+                              icon-name="standard:user"
+                              size="small"
+                            ></lightning-icon>
+                          </div>
+                          <div class="slds-media__body">
+                            <p class="slds-text-body_regular">{name}</p>
+                          </div>
+                        </div>
+                      </template>
+                    </div>
+
+                    <!-- TODO SHow external participants -->
+                    <div class="slds-card__header slds-grid">
+                      <header
+                        class="slds-media slds-media_center slds-has-flexi-truncate"
+                      >
+                        <div class="slds-media__figure">
+                          <span
+                            class="slds-icon_container slds-icon-standard-user"
+                          >
+                            <lightning-icon
+                              icon-name="standard:user"
+                              size="small"
+                            ></lightning-icon>
+                          </span>
+                        </div>
+                        <div class="slds-media__body">
+                          <h2 class="slds-card__header-title">
+                            <span>External Participants</span>
+                          </h2>
+                        </div>
+                      </header>
+                    </div>
+                    <div class="slds-card__body slds-card__body_inner">
+                      <template for:each={externalParticipants} for:item="name">
                         <div
                           key={name}
                           class="slds-media slds-p-around_x-small slds-border_bottom"

@@ -78,6 +78,8 @@ export default class LaunchPageModal extends LightningModal {
   async connectedCallback() {
     console.log("Connected callback of modal is called");
 
+    console.log("connnntentt", this.content);
+
     const authToken =
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhaGlsLmt1bWFyQGludGVsbG9zeW5jLmNvbSIsImlhdCI6MTcxNTc3ODI1NSwiZXhwIjoxNzQ3MzM1ODU1fQ.n5mjllU-DbplgTSiQUsNBnMCXOUtHX-eeAudcr-rOoQ";
     this.cmtToken = await this.retrieveOrFetchToken(authToken);

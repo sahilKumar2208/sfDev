@@ -5,11 +5,13 @@ import getContractDocumentsDetails from "@salesforce/apex/ContractDetailsControl
 import downloadDocument from "@salesforce/apex/ContractDetailsController.downloadDocument";
 import retrieveCurrentUserAccountDetails from "@salesforce/apex/AccountDetailsController.retrieveCurrentUserAccountDetails";
 import getExpiryTime from "@salesforce/apex/JwtDecoder.getExpiryTime";
-
 import { NavigationMixin } from "lightning/navigation";
+import ViewDocModal from "c/viewDocumentModal";
 
-export default class ContractDocuments extends NavigationMixin(LightningElement) {
-  @track isLoading;
+export default class ContractDocuments extends NavigationMixin(
+  LightningElement
+) {
+  @track isLoading = true;
   @track isContractDetailsPresent = false;
   @track contractId;
   @api recordId;
@@ -21,13 +23,15 @@ export default class ContractDocuments extends NavigationMixin(LightningElement)
   @track hasError = false;
   @track hasContractRecordError = false;
 
+  @track isModalOpen = false;
+  @track viewUrl;
+
   async connectedCallback() {
     const userDetails = await this.fetchUserDetails();
     const authToken = await this.fetchAuthToken(userDetails.Email);
     this.cmtToken = await this.retrieveCmtToken(authToken);
 
     if (this.cmtToken) {
-      this.isLoading = true;
       await this.loadContractDetails();
       this.isLoading = false;
     }
@@ -220,6 +224,7 @@ export default class ContractDocuments extends NavigationMixin(LightningElement)
     const contractId = event.target.dataset.documentId;
     const storageId = event.target.dataset.storageId;
     const extension = event.target.dataset.extension;
+    const nameOfDoc = event.target.dataset.documentName;
 
     console.log(
       "Viewing document with contractId:",
@@ -234,13 +239,18 @@ export default class ContractDocuments extends NavigationMixin(LightningElement)
       // Call handleDownload function
       this.handleDownload(event);
     } else {
-      // Open the document in the editor
-      const viewUrl = `https://playground-contracts.intellosync.com/editor/collaborate/${contractId}/${storageId}/view`;
-      this[NavigationMixin.Navigate]({
-        type: "standard__webPage",
-        attributes: { url: viewUrl },
-        state: { nooverride: true }
-      });
+      // Open the document in the modal
+      this.viewUrl = `https://playground-contracts.intellosync.com/editor/collaborate/${contractId}/${storageId}/view`;
+      this.handleLaunchPage(nameOfDoc);
     }
+  }
+
+  async handleLaunchPage(nameOfDoc) {
+    const result = await ViewDocModal.open({
+      size: "large",
+      description: "Accessible description of modal's purpose",
+      content: { viewUrl: this.viewUrl, nameOfDoc: nameOfDoc }
+    });
+    console.log("view document modal result:", result);
   }
 }

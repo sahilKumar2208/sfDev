@@ -81,6 +81,7 @@
                     data-document-id={documentItem.contractId}
                     data-storage-id={documentItem.storageDocumentId}
                     data-extension={documentItem.extension}
+                    data-document-name={documentItem.nameOfDocument}
                     class="action-button"
                   ></lightning-button-icon>
                   <lightning-button-icon
@@ -90,6 +91,7 @@
                     data-document-id={documentItem.contractId}
                     data-storage-id={documentItem.storageDocumentId}
                     data-extension={documentItem.extension}
+                    data-document-name={documentItem.nameOfDocument}
                     class="action-button"
                   ></lightning-button-icon>
                 </div>
@@ -101,13 +103,13 @@
     </template>
 
     <template if:false={isLoading}>
-    <template if:false={isContractDetailsPresent}>
-      <div
-        class="no-documents-container slds-box slds-theme_shade slds-m-bottom_medium"
-      >
-        <p class="document-title">No documents to display</p>
-      </div>
-    </template>
+      <template if:false={isContractDetailsPresent}>
+        <div
+          class="no-documents-container slds-box slds-theme_shade slds-m-bottom_medium"
+        >
+          <p class="document-title">No documents to display</p>
+        </div>
+      </template>
     </template>
 
     <!-- Display error message if fetchTemplateError is true -->
@@ -125,4 +127,8 @@
       <p class="error-message">Some error occured !!!</p>
     </template>
   </div>
+
+  <template if:true={isModalOpen}>
+    <c-view-document-modal is-open={isModalOpen}></c-view-document-modal>
+  </template>
 </template>

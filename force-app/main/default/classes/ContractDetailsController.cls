@@ -93,7 +93,7 @@ public with sharing class ContractDetailsController {
         return responseWrapper;
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static ApiResponseWrapper getContractDocumentsDetails(String contractId, String accessToken) {
         ApiResponseWrapper responseWrapper = new ApiResponseWrapper();
 

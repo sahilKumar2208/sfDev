@@ -143,6 +143,7 @@ export default class ContractDetails extends LightningElement {
   @track internalSignatories = [];
   @track externalSignatories = [];
   @track participants = [];
+  @track externalParticipants = [];
 
   @track showInitialDetails = false;
   @track showApprovers = false;
@@ -231,11 +232,15 @@ export default class ContractDetails extends LightningElement {
   }
 
   showInitialStageDetailsUI(contractDetails) {
-    const allParticipantsArray = [
+    const internalParticipantsArray = [
       ...contractDetails.participants,
       ...contractDetails.externalParticipants
     ];
-    this.participants = allParticipantsArray.map((person) => person.fullName);
+
+    const externalParticipantsArray = [ ...contractDetails.externalParticipants];
+
+    this.participants = internalParticipantsArray.map((person) => person.fullName);
+    this.externalParticipants = externalParticipantsArray.map((person) => person.fullName);
     this.showInitialDetails = true;
   }
 
