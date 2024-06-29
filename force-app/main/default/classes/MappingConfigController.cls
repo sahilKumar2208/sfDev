@@ -10,7 +10,7 @@ public with sharing class MappingConfigController {
         try {
             // Create the HTTP request
             HttpRequest req = new HttpRequest();
-            req.setEndpoint('https://19f5-157-37-132-40.ngrok-free.app/api/v1/mapping/' + orgId + '/template/' + templateId); // Replace with the actual endpoint
+            req.setEndpoint('https://19f5-157-37-132-40.ngrok-free.app/api/v1/mapping/' + orgId + '/template/' + templateId + '/Salesforce'); // Replace with the actual endpoint
             req.setMethod('GET');
             req.setHeader('Content-Type', 'application/json');
             req.setHeader('ngrok-skip-browser-warning', '69420');
