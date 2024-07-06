@@ -17,7 +17,7 @@ public with sharing class UtilsController {
     public static UserResponse getLoggedInUserDetails(String accessToken) {
         // Make the callout to the external REST API
         HttpRequest request = new HttpRequest();
-        request.setEndpoint('https://19f5-157-37-132-40.ngrok-free.app/api/v1/user');
+        request.setEndpoint('https://c40b-103-251-142-10.ngrok-free.app/api/v1/user');
         request.setMethod('GET');
         request.setHeader('Authorization', 'Bearer ' + accessToken); // 'authorization' should be 'Authorization'
         Http http = new Http();

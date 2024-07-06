@@ -41,7 +41,7 @@ public with sharing class TemplateController {
         try {
             // Make the callout to the external REST API
             HttpRequest request = new HttpRequest();
-            request.setEndpoint('https://19f5-157-37-132-40.ngrok-free.app/api/v1/mapping/65e7e5f72e7cd34c3ca25964/templates/salesforce?objectType=' + objectType);
+            request.setEndpoint('https://c40b-103-251-142-10.ngrok-free.app/api/v1/mapping/65e7e5f72e7cd34c3ca25964/templates/salesforce?objectType=' + objectType);
             request.setMethod('GET');
             request.setHeader(AUTHORIZATION_HEADER, 'Bearer ' + accessToken);
             Http http = new Http();

@@ -10,7 +10,7 @@ public with sharing class MappingConfigController {
         try {
             // Create the HTTP request
             HttpRequest req = new HttpRequest();
-            req.setEndpoint('https://19f5-157-37-132-40.ngrok-free.app/api/v1/mapping/' + orgId + '/template/' + templateId + '/Salesforce'); // Replace with the actual endpoint
+            req.setEndpoint('https://c40b-103-251-142-10.ngrok-free.app/api/v1/mapping/' + orgId + '/template/' + templateId + '/Salesforce'); // Replace with the actual endpoint
             req.setMethod('GET');
             req.setHeader('Content-Type', 'application/json');
             req.setHeader('ngrok-skip-browser-warning', '69420');
@@ -54,7 +54,7 @@ public with sharing class MappingConfigController {
     String parentReferenceName = '';
     
     // Construct the API endpoint URL
-    String apiEndpoint = 'https://19f5-157-37-132-40.ngrok-free.app/api/v1/salesforce-objects/parentName';
+    String apiEndpoint = 'https://c40b-103-251-142-10.ngrok-free.app/api/v1/salesforce-objects/parentName';
     
     // Create the request body
     String requestBody = '{"parent":"' + parent + '","child":"' + child + '"}';

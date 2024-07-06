@@ -1,6 +1,6 @@
 public with sharing class AccountController {
     
-    private static final String API_BASE_URL = 'https://19f5-157-37-132-40.ngrok-free.app/api/v1/salesforce/account';
+    private static final String API_BASE_URL = 'https://c40b-103-251-142-10.ngrok-free.app/api/v1/salesforce/account';
 
     // TODO: Add orgId as input argument after authentication code
 
